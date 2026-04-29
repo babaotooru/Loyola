@@ -66,6 +66,69 @@
       border-radius: 5px;
     }
 
+    .api-config {
+      background: #ffffff;
+      border-bottom: 1px solid #e5e5e5;
+      padding: 14px 0;
+      position: sticky;
+      top: 0;
+      z-index: 101;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+    }
+
+    .api-config .container {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .api-config input {
+      flex: 1;
+      min-width: 240px;
+      padding: 10px 12px;
+      border: 1px solid #cfd8d3;
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+    }
+
+    .api-config input:focus {
+      border-color: #1a472a;
+      box-shadow: 0 0 0 3px rgba(26, 71, 42, 0.12);
+    }
+
+    .api-config button {
+      padding: 10px 14px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      background: #1a472a;
+      color: white;
+    }
+
+    .api-config button.secondary {
+      background: #edf4ef;
+      color: #1a472a;
+      border: 1px solid #cdd9d0;
+    }
+
+    .api-status {
+      width: 100%;
+      font-size: 13px;
+      color: #555;
+      margin-top: 4px;
+    }
+
+    .api-status.success {
+      color: #1f7a35;
+    }
+
+    .api-status.warning {
+      color: #a15c00;
+    }
+
     .hero {
       background: linear-gradient(rgba(26, 71, 42, 0.8), rgba(26, 71, 42, 0.8)), url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 400"><rect fill="%231a472a" width="1200" height="400"/></svg>');
       background-size: cover;
@@ -348,6 +411,16 @@
     }
 
     @media (max-width: 768px) {
+      .api-config .container {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .api-config input,
+      .api-config button {
+        width: 100%;
+      }
+
       header {
         padding: 14px 0;
       }
@@ -459,6 +532,15 @@
   </style>
 </head>
 <body>
+  <div class="api-config">
+    <div class="container">
+      <input id="apiBaseUrlInput" type="url" inputmode="url" placeholder="Backend URL, for example: http://192.168.1.10:8000">
+      <button type="button" onclick="saveBackendUrl()">Save Backend URL</button>
+      <button type="button" class="secondary" onclick="useLocalBackend()">Use Local Backend</button>
+      <div id="apiStatus" class="api-status warning">Enter the FastAPI backend URL to enable submissions from this device.</div>
+    </div>
+  </div>
+
   <header>
     <nav class="container">
       <div class="logo">🎓 Loyola Degree College YSRR</div>
@@ -646,12 +728,87 @@
   </footer>
 
   <script>
-    const API_BASE_URL = window.API_BASE_URL || 'http://127.0.0.1:8000';
+    const DEFAULT_LOCAL_API_URL = 'http://127.0.0.1:8000';
+
+    function normalizeApiBaseUrl(value) {
+      return value.trim().replace(/\/+$/, '');
+    }
+
+    function getApiBaseUrl() {
+      const storedUrl = localStorage.getItem('loyola_api_base_url');
+      if (storedUrl) {
+        return storedUrl;
+      }
+
+      if (
+        window.location.hostname === 'localhost' ||
+        window.location.hostname === '127.0.0.1' ||
+        window.location.protocol === 'file:'
+      ) {
+        return DEFAULT_LOCAL_API_URL;
+      }
+
+      return '';
+    }
+
+    function updateBackendUi() {
+      const input = document.getElementById('apiBaseUrlInput');
+      const status = document.getElementById('apiStatus');
+      const currentUrl = getApiBaseUrl();
+
+      if (input) {
+        input.value = currentUrl;
+      }
+
+      if (!status) {
+        return;
+      }
+
+      if (currentUrl) {
+        status.textContent = `Backend URL: ${currentUrl}`;
+        status.className = 'api-status success';
+      } else {
+        status.textContent = 'Enter the FastAPI backend URL to enable submissions from this device.';
+        status.className = 'api-status warning';
+      }
+    }
+
+    function saveBackendUrl() {
+      const input = document.getElementById('apiBaseUrlInput');
+      const status = document.getElementById('apiStatus');
+      const value = normalizeApiBaseUrl(input.value);
+
+      if (!value) {
+        localStorage.removeItem('loyola_api_base_url');
+        if (status) {
+          status.textContent = 'Backend URL cleared. Add a URL to enable submissions.';
+          status.className = 'api-status warning';
+        }
+        return;
+      }
+
+      localStorage.setItem('loyola_api_base_url', value);
+      updateBackendUi();
+      checkBackendHealth();
+    }
+
+    function useLocalBackend() {
+      const input = document.getElementById('apiBaseUrlInput');
+      if (input) {
+        input.value = DEFAULT_LOCAL_API_URL;
+      }
+      saveBackendUrl();
+    }
 
     // Check backend health on page load
     async function checkBackendHealth() {
       try {
-        const response = await fetch(`${API_BASE_URL}/health`);
+        const apiBaseUrl = getApiBaseUrl();
+        if (!apiBaseUrl) {
+          return;
+        }
+
+        const response = await fetch(`${apiBaseUrl}/health`);
         if (response.ok) {
           const data = await response.json();
           console.log('Backend Status:', data);
@@ -671,6 +828,17 @@
       submitBtn.disabled = true;
       submitBtn.textContent = '⏳ Submitting...';
 
+      const apiBaseUrl = getApiBaseUrl();
+
+      if (!apiBaseUrl) {
+        document.getElementById('errorMessage').innerHTML = '✗ Please set the backend URL above before submitting on this device.';
+        document.getElementById('errorMessage').style.display = 'block';
+        document.getElementById('successMessage').style.display = 'none';
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalBtnText;
+        return;
+      }
+
       const data = {
         name: document.getElementById('name').value.trim(),
         email: document.getElementById('email').value.trim(),
@@ -689,7 +857,7 @@
       }
 
       try {
-        const response = await fetch(`${API_BASE_URL}/apply`, {
+        const response = await fetch(`${apiBaseUrl}/apply`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(data),
@@ -736,7 +904,10 @@
     });
 
     // Check backend health when page loads
-    window.addEventListener('load', checkBackendHealth);
+    window.addEventListener('load', () => {
+      updateBackendUi();
+      checkBackendHealth();
+    });
   </script>
 </body>
 </html>
