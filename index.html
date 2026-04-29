@@ -126,6 +126,13 @@
       line-height: 1.8;
     }
 
+    .college-photo {
+      width: 100%;
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+      display: block;
+    }
+
     .courses-section {
       background: white;
       padding: 60px 0;
@@ -341,22 +348,112 @@
     }
 
     @media (max-width: 768px) {
+      header {
+        padding: 14px 0;
+      }
+
+      nav {
+        flex-direction: column;
+        gap: 12px;
+        text-align: center;
+      }
+
+      .logo {
+        font-size: 18px;
+        line-height: 1.3;
+      }
+
       .nav-links {
-        gap: 15px;
-        font-size: 14px;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px 14px;
+        font-size: 13px;
+      }
+
+      .nav-links .admin-link {
+        padding: 7px 12px;
+      }
+
+      .hero {
+        padding: 72px 15px;
       }
 
       .hero h1 {
-        font-size: 32px;
+        font-size: 28px;
+        line-height: 1.2;
       }
 
-      .courses-grid {
-        grid-template-columns: repeat(2, 1fr);
+      .hero p {
+        font-size: 16px;
+      }
+
+      section,
+      .about-section,
+      .courses-section,
+      .admission-section,
+      .contact-section {
+        padding: 40px 0;
+      }
+
+      .section-title {
+        font-size: 28px;
+        margin-bottom: 26px;
       }
 
       .about-grid,
       .contact-grid {
         grid-template-columns: 1fr;
+        gap: 24px;
+      }
+
+      .about-text h3 {
+        font-size: 22px;
+      }
+
+      .program-category {
+        margin-bottom: 34px;
+      }
+
+      .program-category h3 {
+        font-size: 20px;
+      }
+
+      .courses-grid {
+        grid-template-columns: 1fr;
+        gap: 14px;
+        margin-bottom: 20px;
+      }
+
+      .course-card {
+        padding: 20px;
+      }
+
+      .course-card h4 {
+        font-size: 17px;
+      }
+
+      .form-container {
+        padding: 24px 18px;
+        border-radius: 12px;
+      }
+
+      .form-group input,
+      .form-group select,
+      .form-group textarea {
+        padding: 12px 13px;
+      }
+
+      .submit-btn {
+        font-size: 15px;
+        padding: 14px;
+      }
+
+      .contact-card {
+        padding: 18px 12px;
+      }
+
+      .college-photo {
+        max-width: 100%;
       }
     }
   </style>
@@ -392,7 +489,7 @@
           <p><strong>Our Vision:</strong> To be a center of excellence in higher education, producing graduates who are competent, ethical, and committed to nation-building.</p>
         </div>
         <div>
-          <img src="20200129112722.png" alt="Loyola Degree College YSRR" style="width: 50%; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.2);">
+          <img src="20200129112722.png" alt="Loyola Degree College YSRR" class="college-photo">
         </div>
       </div>
     </div>
