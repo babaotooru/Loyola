@@ -3,6 +3,8 @@ from pydantic import BaseModel
 from pymongo import MongoClient
 from pymongo.errors import ServerSelectionTimeoutError, ConnectionFailure
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 import json
 import os
 from datetime import datetime
@@ -16,6 +18,19 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+app.mount("/static", StaticFiles(directory=BASE_DIR), name="static")
+
+
+@app.get("/")
+def home():
+    return FileResponse(os.path.join(BASE_DIR, "index.html"))
+
+
+@app.get("/admin")
+def admin_page():
+    return FileResponse(os.path.join(BASE_DIR, "admin.html"))
 
 # MongoDB configuration with timeout
 try:

@@ -489,7 +489,7 @@
           <p><strong>Our Vision:</strong> To be a center of excellence in higher education, producing graduates who are competent, ethical, and committed to nation-building.</p>
         </div>
         <div>
-          <img src="20200129112722.png" alt="Loyola Degree College YSRR" class="college-photo">
+          <img src="/static/20200129112722.png" alt="Loyola Degree College YSRR" class="college-photo">
         </div>
       </div>
     </div>
@@ -649,7 +649,7 @@
     // Check backend health on page load
     async function checkBackendHealth() {
       try {
-        const response = await fetch('http://127.0.0.1:8000/health');
+        const response = await fetch('/health');
         if (response.ok) {
           const data = await response.json();
           console.log('Backend Status:', data);
@@ -687,7 +687,7 @@
       }
 
       try {
-        const response = await fetch('http://127.0.0.1:8000/apply', {
+        const response = await fetch('/apply', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(data),
