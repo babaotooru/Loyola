@@ -478,6 +478,8 @@
   </div>
 
   <script>
+    const API_BASE_URL = window.API_BASE_URL || 'http://127.0.0.1:8000';
+
     let allApplications = [];
 
     async function loadData() {
@@ -486,7 +488,7 @@
         document.getElementById('applicationsTable').style.display = 'none';
         document.getElementById('noData').style.display = 'none';
 
-        const res = await fetch('/applications');
+        const res = await fetch(`${API_BASE_URL}/applications`);
         const data = await res.json();
         allApplications = data;
 

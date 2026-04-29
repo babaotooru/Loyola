@@ -32,6 +32,11 @@ def home():
 def admin_page():
     return FileResponse(os.path.join(BASE_DIR, "admin.html"))
 
+
+@app.get("/static/20200129112722.png")
+def college_photo():
+    return FileResponse(os.path.join(BASE_DIR, "20200129112722.png"))
+
 # MongoDB configuration with timeout
 try:
     client = MongoClient("mongodb://localhost:27017/", serverSelectionTimeoutMS=3000)
