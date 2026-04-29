@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Loyola Degree College YSRR - Admissions</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      background-color: #f4f4f4;
+    }
+
+    header {
+      background: linear-gradient(135deg, #1a472a 0%, #2d5f44 100%);
+      color: white;
+      padding: 20px 0;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    nav {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-size: 24px;
+      font-weight: bold;
+      text-decoration: none;
+      color: white;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 30px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: white;
+      text-decoration: none;
+      transition: opacity 0.3s;
+    }
+
+    .nav-links a:hover {
+      opacity: 0.8;
+    }
+
+    .nav-links .admin-link {
+      background: rgba(255,255,255,0.2);
+      padding: 8px 15px;
+      border-radius: 5px;
+    }
+
+    .hero {
+      background: linear-gradient(rgba(26, 71, 42, 0.8), rgba(26, 71, 42, 0.8)), url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 400"><rect fill="%231a472a" width="1200" height="400"/></svg>');
+      background-size: cover;
+      background-position: center;
+      color: white;
+      padding: 100px 20px;
+      text-align: center;
+    }
+
+    .hero h1 {
+      font-size: 48px;
+      margin-bottom: 20px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+
+    .hero p {
+      font-size: 20px;
+      margin-bottom: 30px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    section {
+      padding: 60px 0;
+    }
+
+    .section-title {
+      text-align: center;
+      font-size: 36px;
+      margin-bottom: 40px;
+      color: #1a472a;
+    }
+
+    .about-section {
+      background: white;
+      padding: 60px 0;
+    }
+
+    .about-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+      align-items: center;
+    }
+
+    .about-text h3 {
+      color: #1a472a;
+      margin-bottom: 15px;
+      font-size: 28px;
+    }
+
+    .about-text p {
+      margin-bottom: 15px;
+      line-height: 1.8;
+    }
+
+    .courses-section {
+      background: white;
+      padding: 60px 0;
+    }
+
+    .program-category {
+      margin-bottom: 50px;
+    }
+
+    .program-category h3 {
+      color: #1a472a;
+      font-size: 24px;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 3px solid #2d5f44;
+    }
+
+    .courses-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .course-card {
+      background: white;
+      border: 2px solid #e0e0e0;
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+      transition: all 0.3s ease;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .course-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 5px;
+      width: 100%;
+      background: linear-gradient(135deg, #1a472a 0%, #2d5f44 100%);
+      border-radius: 10px 10px 0 0;
+    }
+
+    .course-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 8px 20px rgba(26, 71, 42, 0.2);
+      border-color: #1a472a;
+    }
+
+    .course-card h4 {
+      font-size: 18px;
+      margin-bottom: 12px;
+      color: #1a472a;
+      font-weight: 600;
+    }
+
+    .course-card p {
+      font-size: 14px;
+      color: #555;
+      line-height: 1.6;
+    }
+
+    .admission-section {
+      background: white;
+      padding: 60px 0;
+    }
+
+    .form-container {
+      max-width: 650px;
+      margin: 0 auto;
+      background: white;
+      padding: 45px;
+      border-radius: 15px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+      border-top: 5px solid #1a472a;
+    }
+
+    .form-group {
+      margin-bottom: 22px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      color: #1a472a;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 13px 15px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      transition: all 0.3s ease;
+      background-color: #f9f9f9;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: #1a472a;
+      background-color: white;
+      box-shadow: 0 0 8px rgba(26, 71, 42, 0.15);
+    }
+
+    .form-group textarea {
+      width: 100%;
+      padding: 13px 15px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      resize: vertical;
+      transition: all 0.3s ease;
+      background-color: #f9f9f9;
+    }
+
+    .form-group textarea:focus {
+      outline: none;
+      border-color: #1a472a;
+      background-color: white;
+      box-shadow: 0 0 8px rgba(26, 71, 42, 0.15);
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 15px;
+      background: linear-gradient(135deg, #1a472a 0%, #2d5f44 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-top: 10px;
+      box-shadow: 0 4px 15px rgba(26, 71, 42, 0.3);
+    }
+
+    .submit-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(26, 71, 42, 0.4);
+    }
+
+    .submit-btn:active {
+      transform: translateY(0);
+    }
+
+    .submit-btn:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+
+    .contact-section {
+      background: white;
+      padding: 60px 0;
+    }
+
+    .contact-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 30px;
+      margin-top: 40px;
+    }
+
+    .contact-card {
+      text-align: center;
+      padding: 30px;
+    }
+
+    .contact-card h3 {
+      color: #1a472a;
+      margin-bottom: 15px;
+    }
+
+    footer {
+      background: #1a472a;
+      color: white;
+      text-align: center;
+      padding: 30px 0;
+      margin-top: 40px;
+    }
+
+    .success-message {
+      background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+      color: #155724;
+      padding: 18px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      display: none;
+      border-left: 5px solid #28a745;
+      font-weight: 500;
+      box-shadow: 0 2px 8px rgba(40, 167, 69, 0.15);
+    }
+
+    .error-message {
+      background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+      color: #721c24;
+      padding: 18px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      display: none;
+      border-left: 5px solid #dc3545;
+      font-weight: 500;
+      box-shadow: 0 2px 8px rgba(220, 53, 69, 0.15);
+    }
+
+    @media (max-width: 768px) {
+      .nav-links {
+        gap: 15px;
+        font-size: 14px;
+      }
+
+      .hero h1 {
+        font-size: 32px;
+      }
+
+      .courses-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .about-grid,
+      .contact-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <nav class="container">
+      <div class="logo">🎓 Loyola Degree College YSRR</div>
+      <ul class="nav-links">
+        <li><a href="#home">Home</a></li>
+        <li><a href="#about">About</a></li>
+        <li><a href="#courses">Courses</a></li>
+        <li><a href="#admissions">Admissions</a></li>
+        <li><a href="#contact">Contact</a></li>
+        <li><a href="admin.html" class="admin-link">📊 Admin Panel</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <section class="hero" id="home">
+    <h1>Welcome to Loyola Degree College YSRR</h1>
+    <p>Excellence in Education • Building Future Leaders</p>
+  </section>
+
+  <section class="about-section" id="about">
+    <div class="container">
+      <h2 class="section-title">About Our College</h2>
+      <div class="about-grid">
+        <div class="about-text">
+          <h3>Loyola Degree College YSRR</h3>
+          <p>Loyola Degree College YSRR is a premier institution dedicated to providing quality education and fostering intellectual growth. With experienced faculty and modern infrastructure, we create an environment where students can excel academically and develop as responsible citizens.</p>
+          <p><strong>Our Mission:</strong> To impart quality education that enables students to face the challenges of the modern world with confidence and integrity.</p>
+          <p><strong>Our Vision:</strong> To be a center of excellence in higher education, producing graduates who are competent, ethical, and committed to nation-building.</p>
+        </div>
+        <div>
+          <img src="20200129112722.png" alt="Loyola Degree College YSRR" style="width: 50%; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.2);">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="courses-section" id="courses">
+    <div class="container">
+      <h2 class="section-title">Our Programs</h2>
+      
+      <div class="program-category">
+        <h3>📚 Bachelor of Science (B.Sc) Programs</h3>
+        <div class="courses-grid">
+          <div class="course-card">
+            <h4>MPC (Mathematics, Physics & Chemistry)</h4>
+            <p>A comprehensive science program focusing on core mathematics, physics, and chemistry fundamentals.</p>
+          </div>
+          <div class="course-card">
+            <h4>MPCS (Mathematics, Physics & Computer Science)</h4>
+            <p>Combines mathematics and physics with cutting-edge computer science applications.</p>
+          </div>
+          <div class="course-card">
+            <h4>MPST (Mathematics, Physics & Statistics)</h4>
+            <p>Advanced program integrating mathematics, physics, and statistical analysis.</p>
+          </div>
+          <div class="course-card">
+            <h4>MSCS (Mathematics, Statistics & Computer Science)</h4>
+            <p>Specialization in data science combining mathematics, statistics, and programming.</p>
+          </div>
+          <div class="course-card">
+            <h4>BZC (Botany, Zoology & Chemistry)</h4>
+            <p>Comprehensive life sciences program with emphasis on biological and chemical concepts.</p>
+          </div>
+          <div class="course-card">
+            <h4>CZC (Chemistry, Zoology & Computer Applications)</h4>
+            <p>Blend of life sciences with modern computer applications for research and analysis.</p>
+          </div>
+          <div class="course-card">
+            <h4>GPC (Geology, Physics & Computer Applications)</h4>
+            <p>Earth sciences program with physics and computational tools for geological studies.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="program-category">
+        <h3>🎨 Bachelor of Arts (B.A) Programs</h3>
+        <div class="courses-grid">
+          <div class="course-card">
+            <h4>HPCA (History, Political Science & Computer Applications)</h4>
+            <p>Social sciences program combining history and political science with digital literacy and applications.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="program-category">
+        <h3>💼 Bachelor of Commerce (B.Com) Programs</h3>
+        <div class="courses-grid">
+          <div class="course-card">
+            <h4>B.Com with Computer Applications</h4>
+            <p>Commerce education integrated with modern IT skills for digital business transformation.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="program-category">
+        <h3>🏢 Bachelor of Business Administration (BBA)</h3>
+        <div class="courses-grid">
+          <div class="course-card">
+            <h4>BBA (General)</h4>
+            <p>Comprehensive business administration course preparing students for corporate leadership and entrepreneurship.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="admission-section" id="admissions">
+    <div class="container">
+      <h2 class="section-title">Apply for Admission</h2>
+      <div class="form-container">
+        <div id="successMessage" class="success-message">✓ Your application has been submitted successfully! Our admissions team will contact you soon.</div>
+        <div id="errorMessage" class="error-message" style="display: none;">✗ An error occurred. Please try again.</div>
+        
+        <form onsubmit="submitForm(event)" id="admissionForm">
+          <div class="form-group">
+            <label for="name">Full Name *</label>
+            <input type="text" id="name" placeholder="Enter your full name" required>
+          </div>
+
+          <div class="form-group">
+            <label for="email">Email Address *</label>
+            <input type="email" id="email" placeholder="Enter your email" required>
+          </div>
+
+          <div class="form-group">
+            <label for="phone">Phone Number *</label>
+            <input type="tel" id="phone" placeholder="Enter your phone number" required>
+          </div>
+
+          <div class="form-group">
+            <label for="course">Select Program of Interest *</label>
+            <select id="course" required>
+              <option value="">-- Select a Program --</option>
+              <optgroup label="Bachelor of Science (B.Sc)">
+                <option value="B.Sc - MPC">B.Sc - MPC (Mathematics, Physics & Chemistry)</option>
+                <option value="B.Sc - MPCS">B.Sc - MPCS (Mathematics, Physics & Computer Science)</option>
+                <option value="B.Sc - MPST">B.Sc - MPST (Mathematics, Physics & Statistics)</option>
+                <option value="B.Sc - MSCS">B.Sc - MSCS (Mathematics, Statistics & Computer Science)</option>
+                <option value="B.Sc - BZC">B.Sc - BZC (Botany, Zoology & Chemistry)</option>
+                <option value="B.Sc - CZC">B.Sc - CZC (Chemistry, Zoology & Computer Applications)</option>
+                <option value="B.Sc - GPC">B.Sc - GPC (Geology, Physics & Computer Applications)</option>
+              </optgroup>
+              <optgroup label="Bachelor of Arts (B.A)">
+                <option value="B.A - HPCA">B.A - HPCA (History, Political Science & Computer Applications)</option>
+              </optgroup>
+              <optgroup label="Bachelor of Commerce (B.Com)">
+                <option value="B.Com - CA">B.Com with Computer Applications</option>
+              </optgroup>
+              <optgroup label="Bachelor of Business Administration">
+                <option value="BBA">BBA (General)</option>
+              </optgroup>
+            </select>
+          </div>
+
+          <button type="submit" class="submit-btn">Submit Application</button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <section class="contact-section" id="contact">
+    <div class="container">
+      <h2 class="section-title">Get in Touch</h2>
+      <div class="contact-grid">
+        <div class="contact-card">
+          <h3>📍 Location</h3>
+          <p>Loyola Degree College YSRR<br>C68M+Q66, Boggudupalli, Andhra Pradesh 516391</p>
+        </div>
+        <div class="contact-card">
+          <h3>📞 Contact</h3>
+          <p>Phone: 085000 92672<br>Email: admissions@loyola.edu.in</p>
+        </div>
+        <div class="contact-card">
+          <h3>🕐 Hours</h3>
+          <p>Mon - Fri: 9:00 AM - 5:00 PM<br>Sat: 10:00 AM - 2:00 PM</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container">
+      <p>&copy; 2026 Loyola Degree College YSRR. All rights reserved. | Excellence in Education</p>
+    </div>
+  </footer>
+
+  <script>
+    // Check backend health on page load
+    async function checkBackendHealth() {
+      try {
+        const response = await fetch('http://127.0.0.1:8000/health');
+        if (response.ok) {
+          const data = await response.json();
+          console.log('Backend Status:', data);
+        }
+      } catch (error) {
+        console.log('Backend health check failed (this is normal if server is not running yet)');
+      }
+    }
+
+    async function submitForm(e) {
+      e.preventDefault();
+
+      const submitBtn = document.querySelector('.submit-btn');
+      const originalBtnText = submitBtn.textContent;
+      
+      // Disable button during submission
+      submitBtn.disabled = true;
+      submitBtn.textContent = '⏳ Submitting...';
+
+      const data = {
+        name: document.getElementById('name').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        phone: document.getElementById('phone').value.trim(),
+        course: document.getElementById('course').value.trim()
+      };
+
+      // Validate form data
+      if (!data.name || !data.email || !data.phone || !data.course) {
+        document.getElementById('errorMessage').textContent = '✗ Please fill all fields correctly.';
+        document.getElementById('errorMessage').style.display = 'block';
+        document.getElementById('successMessage').style.display = 'none';
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalBtnText;
+        return;
+      }
+
+      try {
+        const response = await fetch('http://127.0.0.1:8000/apply', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+          timeout: 10000
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          let storageInfo = result.storage === 'mongodb' ? ' (Database)' : ' (Local Storage)';
+          document.getElementById('successMessage').innerHTML = '✓ Your application has been submitted successfully!' + storageInfo + ' Our admissions team will contact you soon.';
+          document.getElementById('successMessage').style.display = 'block';
+          document.getElementById('errorMessage').style.display = 'none';
+          document.getElementById('admissionForm').reset();
+          submitBtn.textContent = '✓ Submitted';
+          
+          setTimeout(() => {
+            document.getElementById('successMessage').style.display = 'none';
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalBtnText;
+          }, 5000);
+        } else {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.detail || 'Failed to submit application');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        document.getElementById('errorMessage').innerHTML = '✗ ' + (error.message || 'An error occurred. Please try again.');
+        document.getElementById('errorMessage').style.display = 'block';
+        document.getElementById('successMessage').style.display = 'none';
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalBtnText;
+      }
+    }
+
+    // Smooth scroll for navigation links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth' });
+        }
+      });
+    });
+
+    // Check backend health when page loads
+    window.addEventListener('load', checkBackendHealth);
+  </script>
+</body>
+</html>
