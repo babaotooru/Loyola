@@ -645,8 +645,13 @@
     </div>
   </footer>
 
+  <script src="config.js"></script>
   <script>
     function getApiBaseUrl() {
+      if (window.API_BASE_URL && window.API_BASE_URL.trim()) {
+        return window.API_BASE_URL.trim().replace(/\/+$/, '');
+      }
+
       if (window.location.protocol === 'file:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
         return 'http://127.0.0.1:8000';
       }
