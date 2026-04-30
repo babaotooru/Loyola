@@ -38,8 +38,13 @@ def college_photo():
     return FileResponse(os.path.join(BASE_DIR, "20200129112722.png"))
 
 # MongoDB configuration with timeout
+MONGODB_URI = os.getenv(
+    "MONGODB_URI",
+    "mongodb+srv://babaotooru_db_user:0bujrmNeprgjfElq@cluster0.emrubdg.mongodb.net/?appName=Cluster0"
+)
+
 try:
-    client = MongoClient("mongodb://localhost:27017/", serverSelectionTimeoutMS=3000)
+    client = MongoClient(MONGODB_URI, serverSelectionTimeoutMS=5000)
     # Test the connection
     client.admin.command('ping')
     db = client["college"]
