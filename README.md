@@ -115,8 +115,6 @@ Example curl (submit an application):
 curl -X POST http://127.0.0.1:8000/apply \
   -H "Content-Type: application/json" \
   -d '{"name":"Test","email":"test@example.com","phone":"9000000000","course":"B.Sc - Data Science"}'
-
-  -d '{"name":"Test","email":"test@example.com","phone":"9000000000","course":"B.Sc Data Science"}'
 ```
 
 Admin & CSV export
@@ -136,6 +134,13 @@ Invoke-RestMethod -UseBasicParsing -Uri http://127.0.0.1:8000/applications | Con
 Deployment notes
 ----------------
 - `render.yaml` is included as a starting point for deploying the backend to Render (Python service + requirements install + uvicorn start). If you need, I can help set up a Render service and a managed MySQL/Planetscale/Remote DB and wire the connection string into the Render environment variables.
+
+Vercel frontend deployment
+--------------------------
+- This repository now includes `vercel.json` for deploying the static frontend to Vercel.
+- `vercel.json` rewrites `/` to `index.html` and `/admin` to `admin.html`.
+- Before deploying, set the first URL in `config.js` to your public backend URL (for example `https://loyola-rvgj.onrender.com`).
+- On Vercel, deploy the repository root as a static site. No backend code is deployed there.
 
 Contact & Support
 -----------------
