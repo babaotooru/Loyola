@@ -253,3 +253,51 @@ def get_data():
     except Exception as e:
         print(f"Error in get_data: {e}")
         return []
+
+
+@app.post("/cleanup-applications")
+def cleanup_applications():
+    """Remove applications that are not part of the current three B.Sc programs."""
+    allowed_courses = {
+        "B.Sc Quantum Technologies",
+        "B.Sc Data Science",
+        "B.Sc Computer Science",
+    }
+
+    if not mysql_available:
+        raise HTTPException(status_code=503, detail="MySQL is not available")
+
+    conn = get_mysql_connection()
+    if not conn:
+        raise HTTPException(status_code=503, detail="Could not connect to MySQL")
+
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, course FROM admissions ORDER BY id")
+        rows = cursor.fetchall()
+        ids_to_delete = [row[0] for row in rows if row[1] not in allowed_courses]
+        before_count = len(rows)
+
+        deleted_count = 0
+        if ids_to_delete:
+            placeholders = ",".join(["%s"] * len(ids_to_delete))
+            cursor.execute(f"DELETE FROM admissions WHERE id IN ({placeholders})", ids_to_delete)
+            conn.commit()
+            deleted_count = cursor.rowcount
+
+        cursor.execute("SELECT COUNT(*) FROM admissions")
+        after_count = cursor.fetchone()[0]
+
+        cursor.close()
+        conn.close()
+
+        return {
+            "success": True,
+            "before_count": before_count,
+            "deleted_count": deleted_count,
+            "after_count": after_count,
+            "allowed_courses": sorted(list(allowed_courses)),
+        }
+    except Exception as e:
+        conn.close()
+        raise HTTPException(status_code=500, detail=str(e))

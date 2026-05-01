@@ -404,15 +404,15 @@
       </div>
       <div class="stat-card">
         <div class="number" id="bscCount">0</div>
-        <div class="label">B.Sc Applications</div>
+        <div class="label">B.Sc Quantum Technologies</div>
       </div>
       <div class="stat-card">
-        <div class="number" id="baCount">0</div>
-        <div class="label">B.A Applications</div>
+        <div class="number" id="datascienceCount">0</div>
+        <div class="label">B.Sc Data Science</div>
       </div>
       <div class="stat-card">
-        <div class="number" id="bcomCount">0</div>
-        <div class="label">B.Com Applications</div>
+        <div class="number" id="computerscienceCount">0</div>
+        <div class="label">B.Sc Computer Science</div>
       </div>
     </div>
 
@@ -429,9 +429,9 @@
       <select id="courseFilter" onchange="filterByCourse()">
         <option value="">All Programs</option>
         <optgroup label="Bachelor of Science (B.Sc)">
-          <option value="B.Sc - Quantum Technologies">B.Sc - Quantum Technologies</option>
-          <option value="B.Sc - Data Science">B.Sc - Data Science</option>
-          <option value="B.Sc - Computer Science">B.Sc - Computer Science</option>
+          <option value="B.Sc Quantum Technologies">B.Sc Quantum Technologies</option>
+          <option value="B.Sc Data Science">B.Sc Data Science</option>
+          <option value="B.Sc Computer Science">B.Sc Computer Science</option>
         </optgroup>
       </select>
     </div>
@@ -588,15 +588,14 @@
 
     function updateStats() {
       const total = allApplications.length;
-      const bsc = allApplications.filter(a => a.course && a.course.startsWith('B.Sc')).length;
-      const ba = allApplications.filter(a => a.course && a.course.startsWith('B.A')).length;
-      const bcom = allApplications.filter(a => a.course && (a.course.startsWith('B.Com') || a.course === 'B.Com - CA')).length;
-      const bba = allApplications.filter(a => a.course === 'BBA').length;
+      const quantum = allApplications.filter(a => a.course === 'B.Sc Quantum Technologies').length;
+      const dataScience = allApplications.filter(a => a.course === 'B.Sc Data Science').length;
+      const computerScience = allApplications.filter(a => a.course === 'B.Sc Computer Science').length;
 
       document.getElementById('totalCount').textContent = total;
-      document.getElementById('bscCount').textContent = bsc;
-      document.getElementById('baCount').textContent = ba;
-      document.getElementById('bcomCount').textContent = bcom;
+      document.getElementById('bscCount').textContent = quantum;
+      document.getElementById('datascienceCount').textContent = dataScience;
+      document.getElementById('computerscienceCount').textContent = computerScience;
     }
 
     function filterTable() {
