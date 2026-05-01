@@ -77,6 +77,15 @@ Open pages in a browser:
 - Public site: `http://localhost:8000` or `http://<your-laptop-ip>:8000` for mobile on same Wi‑Fi
 - Admin dashboard: `http://localhost:8000/admin`
 
+Important deployment note
+-------------------------
+If you see `404 - There isn't a GitHub Pages site here`, that means the frontend has not been published to GitHub Pages yet. This project can run in two separate places:
+
+1. Frontend: GitHub Pages, or local FastAPI at `http://localhost:8000`
+2. Backend: Render at your public URL (for example `https://loyola-rvgj.onrender.com`)
+
+For the app to work on all devices, publish the frontend to GitHub Pages and keep the public backend URL first in `config.js`.
+
 Frontend configuration
 ----------------------
 `config.js` is used by the frontend to locate the backend API. It supports multiple fallback URLs in `window.API_BASE_URLS`.
