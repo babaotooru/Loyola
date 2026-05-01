@@ -3,7 +3,7 @@
 // 2) Keep LAN and localhost as fallback for local testing.
 // Replace the first value below with your deployed backend URL.
 window.API_BASE_URLS = [
-	'https://YOUR-BACKEND-URL.onrender.com',
+	'https://loyola-rvgj.onrender.com',
 	'http://10.179.54.212:8000',
 	'http://127.0.0.1:8000'
 ];
