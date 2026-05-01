@@ -640,7 +640,15 @@
           method: 'GET',
           signal: controller.signal
         });
-        return response.ok;
+        if (response.ok) {
+          return true;
+        }
+
+        const fallbackResponse = await fetch(`${baseUrl}/applications`, {
+          method: 'GET',
+          signal: controller.signal
+        });
+        return fallbackResponse.ok;
       } catch {
         return false;
       } finally {
@@ -662,7 +670,8 @@
         }
       }
 
-      return '';
+      const fallbackCandidates = getApiCandidates();
+      return fallbackCandidates.length > 0 ? fallbackCandidates[0] : '';
     }
 
     // Check backend health on page load
@@ -696,7 +705,7 @@
       const apiBaseUrl = await resolveApiBaseUrl();
 
       if (!apiBaseUrl) {
-        document.getElementById('errorMessage').innerHTML = '✗ Backend is unreachable. If you are on another mobile network, use a public backend URL in config.js.';
+        document.getElementById('errorMessage').innerHTML = '✗ Backend URL is not configured. Set the first URL in config.js to your public backend.';
         document.getElementById('errorMessage').style.display = 'block';
         document.getElementById('successMessage').style.display = 'none';
         submitBtn.disabled = false;
@@ -749,7 +758,11 @@
         }
       } catch (error) {
         console.error('Error:', error);
-        document.getElementById('errorMessage').innerHTML = '✗ ' + (error.message || 'An error occurred. Please try again.');
+        const fetchFailed = error && error.message && error.message.toLowerCase().includes('fetch');
+        const message = fetchFailed
+          ? 'Backend connection failed. Update the first URL in config.js to your live public backend URL.'
+          : (error.message || 'An error occurred. Please try again.');
+        document.getElementById('errorMessage').innerHTML = '✗ ' + message;
         document.getElementById('errorMessage').style.display = 'block';
         document.getElementById('successMessage').style.display = 'none';
         submitBtn.disabled = false;

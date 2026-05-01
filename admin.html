@@ -509,7 +509,15 @@
           method: 'GET',
           signal: controller.signal
         });
-        return response.ok;
+        if (response.ok) {
+          return true;
+        }
+
+        const fallbackResponse = await fetch(`${baseUrl}/applications`, {
+          method: 'GET',
+          signal: controller.signal
+        });
+        return fallbackResponse.ok;
       } catch {
         return false;
       } finally {
@@ -531,7 +539,8 @@
         }
       }
 
-      return '';
+      const fallbackCandidates = getApiCandidates();
+      return fallbackCandidates.length > 0 ? fallbackCandidates[0] : '';
     }
 
     let allApplications = [];
@@ -546,7 +555,7 @@
 
         if (!apiBaseUrl) {
           document.getElementById('loadingSpinner').style.display = 'none';
-          document.getElementById('noData').innerHTML = '<p>⚠️ Backend is unreachable. If you are on another mobile network, use a public backend URL in config.js.</p>';
+          document.getElementById('noData').innerHTML = '<p>⚠️ Backend URL is not configured. Set the first URL in config.js to your public backend.</p>';
           document.getElementById('noData').style.display = 'block';
           return;
         }
@@ -581,7 +590,10 @@
       } catch (error) {
         console.error('Error loading data:', error);
         document.getElementById('loadingSpinner').style.display = 'none';
-        document.getElementById('noData').innerHTML = '<p>⚠️ Error loading applications. Please try again.</p>';
+        const fetchFailed = error && error.message && error.message.toLowerCase().includes('fetch');
+        document.getElementById('noData').innerHTML = fetchFailed
+          ? '<p>⚠️ Could not connect to backend. Update the first URL in config.js to your live public backend URL.</p>'
+          : '<p>⚠️ Error loading applications. Please try again.</p>';
         document.getElementById('noData').style.display = 'block';
       }
     }
