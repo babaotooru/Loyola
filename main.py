@@ -48,9 +48,14 @@ def admin_page_html():
     return FileResponse(os.path.join(BASE_DIR, "admin.html"))
 
 
-@app.get("/static/20200129112722.png")
+@app.get("/photo.png")
 def college_photo():
-    return FileResponse(os.path.join(BASE_DIR, "20200129112722.png"))
+    return FileResponse(os.path.join(BASE_DIR, "photo.png"))
+
+
+@app.get("/static/photo.png")
+def college_photo_static():
+    return FileResponse(os.path.join(BASE_DIR, "photo.png"))
 
 
 @app.get("/config.js")
