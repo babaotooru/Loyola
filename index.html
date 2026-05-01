@@ -503,32 +503,16 @@
         <h3>📚 Bachelor of Science (B.Sc) Programs</h3>
         <div class="courses-grid">
           <div class="course-card">
-            <h4>MPC (Mathematics, Physics & Chemistry)</h4>
-            <p>A comprehensive science program focusing on core mathematics, physics, and chemistry fundamentals.</p>
+            <h4>B.Sc - Quantum Technologies</h4>
+            <p>Cutting-edge program focused on quantum computing, quantum information and emerging technologies.</p>
           </div>
           <div class="course-card">
-            <h4>MPCS (Mathematics, Physics & Computer Science)</h4>
-            <p>Combines mathematics and physics with cutting-edge computer science applications.</p>
+            <h4>B.Sc - Data Science</h4>
+            <p>Comprehensive data science curriculum covering statistics, machine learning and practical data engineering.</p>
           </div>
           <div class="course-card">
-            <h4>MPST (Mathematics, Physics & Statistics)</h4>
-            <p>Advanced program integrating mathematics, physics, and statistical analysis.</p>
-          </div>
-          <div class="course-card">
-            <h4>MSCS (Mathematics, Statistics & Computer Science)</h4>
-            <p>Specialization in data science combining mathematics, statistics, and programming.</p>
-          </div>
-          <div class="course-card">
-            <h4>BZC (Botany, Zoology & Chemistry)</h4>
-            <p>Comprehensive life sciences program with emphasis on biological and chemical concepts.</p>
-          </div>
-          <div class="course-card">
-            <h4>CZC (Chemistry, Zoology & Computer Applications)</h4>
-            <p>Blend of life sciences with modern computer applications for research and analysis.</p>
-          </div>
-          <div class="course-card">
-            <h4>GPC (Geology, Physics & Computer Applications)</h4>
-            <p>Earth sciences program with physics and computational tools for geological studies.</p>
+            <h4>B.Sc - Computer Science</h4>
+            <p>Core computer science program emphasizing programming, algorithms and software development.</p>
           </div>
         </div>
       </div>
@@ -629,7 +613,15 @@
         </div>
         <div class="contact-card">
           <h3>📞 Contact</h3>
-          <p>Phone: 085000 92672<br>Email: admissions@loyola.edu.in</p>
+          <p>
+            Mr. M. Ramana Reddy (HOD, Dept. of Computational Sciences)<br>
+            Phone: +91 99850 24734<br>
+          </p>
+          <p>
+            Mrs. D. Himaja (Lecturer, Dept. of Computational Sciences)<br>
+            Phone: +91 95734 63949
+          </p>
+          <p>Email: admissions@loyola.edu.in</p>
         </div>
         <div class="contact-card">
           <h3>🕐 Hours</h3>
@@ -645,28 +637,80 @@
     </div>
   </footer>
 
-  <script src="/static/config.js"></script>
+  <script src="config.js"></script>
   <script>
-    function getApiBaseUrl() {
-      if (window.API_BASE_URL && window.API_BASE_URL.trim()) {
-        return window.API_BASE_URL.trim().replace(/\/+$/, '');
+    let resolvedApiBaseUrl = null;
+
+    function normalizeBaseUrl(url) {
+      return (url || '').trim().replace(/\/+$/, '');
+    }
+
+    function getApiCandidates() {
+      const candidates = [];
+
+      if (Array.isArray(window.API_BASE_URLS)) {
+        window.API_BASE_URLS.forEach((url) => {
+          const normalized = normalizeBaseUrl(url);
+          if (normalized) candidates.push(normalized);
+        });
+      }
+
+      const singleConfigUrl = normalizeBaseUrl(window.API_BASE_URL);
+      if (singleConfigUrl) {
+        candidates.push(singleConfigUrl);
+      }
+
+      if (window.location.protocol.startsWith('http')) {
+        candidates.push(normalizeBaseUrl(window.location.origin));
       }
 
       if (window.location.protocol === 'file:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-        return 'http://127.0.0.1:8000';
+        candidates.push('http://127.0.0.1:8000');
       }
 
-      if (window.location.hostname.endsWith('github.io')) {
-        return '';
+      candidates.push('http://10.179.54.212:8000');
+
+      return [...new Set(candidates)].filter(Boolean);
+    }
+
+    async function canReachApi(baseUrl) {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 3500);
+
+      try {
+        const response = await fetch(`${baseUrl}/health`, {
+          method: 'GET',
+          signal: controller.signal
+        });
+        return response.ok;
+      } catch {
+        return false;
+      } finally {
+        clearTimeout(timeout);
+      }
+    }
+
+    async function resolveApiBaseUrl() {
+      if (resolvedApiBaseUrl) {
+        return resolvedApiBaseUrl;
       }
 
-      return window.location.origin;
+      const candidates = getApiCandidates();
+      for (const candidate of candidates) {
+        const reachable = await canReachApi(candidate);
+        if (reachable) {
+          resolvedApiBaseUrl = candidate;
+          return candidate;
+        }
+      }
+
+      return '';
     }
 
     // Check backend health on page load
     async function checkBackendHealth() {
       try {
-        const apiBaseUrl = getApiBaseUrl();
+        const apiBaseUrl = await resolveApiBaseUrl();
         if (!apiBaseUrl) {
           return;
         }
@@ -691,10 +735,10 @@
       submitBtn.disabled = true;
       submitBtn.textContent = '⏳ Submitting...';
 
-      const apiBaseUrl = getApiBaseUrl();
+      const apiBaseUrl = await resolveApiBaseUrl();
 
       if (!apiBaseUrl) {
-        document.getElementById('errorMessage').innerHTML = '✗ Backend is unavailable on this host. Open this website through your running FastAPI server URL.';
+        document.getElementById('errorMessage').innerHTML = '✗ Backend is unreachable. If you are on another mobile network, use a public backend URL in config.js.';
         document.getElementById('errorMessage').style.display = 'block';
         document.getElementById('successMessage').style.display = 'none';
         submitBtn.disabled = false;
@@ -729,7 +773,7 @@
 
         if (response.ok) {
           const result = await response.json();
-          let storageInfo = result.storage === 'mongodb' ? ' (Database)' : ' (Local Storage)';
+          let storageInfo = result.storage === 'mysql' ? ' (MySQL Database)' : ' (Local Storage)';
           document.getElementById('successMessage').innerHTML = '✓ Your application has been submitted successfully!' + storageInfo + ' Our admissions team will contact you soon.';
           document.getElementById('successMessage').style.display = 'block';
           document.getElementById('errorMessage').style.display = 'none';

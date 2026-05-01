@@ -52,6 +52,11 @@ def admin_page_html():
 def college_photo():
     return FileResponse(os.path.join(BASE_DIR, "20200129112722.png"))
 
+
+@app.get("/config.js")
+def config_js():
+    return FileResponse(os.path.join(BASE_DIR, "config.js"))
+
 # MySQL configuration
 MYSQL_HOST = os.getenv("MYSQL_HOST", "localhost")
 MYSQL_USER = os.getenv("MYSQL_USER", "root")
