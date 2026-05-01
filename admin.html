@@ -79,6 +79,24 @@
       font-size: 14px;
     }
 
+    .live-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+      color: #1a472a;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .live-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #2d5f44;
+      box-shadow: 0 0 0 4px rgba(45, 95, 68, 0.12);
+    }
+
     .stats {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -274,6 +292,12 @@
       margin-left: auto;
     }
 
+    .last-updated {
+      margin-top: 10px;
+      font-size: 12px;
+      color: #777;
+    }
+
     @media (max-width: 768px) {
       header {
         padding: 14px 0;
@@ -394,6 +418,8 @@
       <div>
         <h1>Student Applications</h1>
         <div class="dashboard-subtitle">View, search, filter, and export admissions quickly.</div>
+        <div class="live-status"><span class="live-dot"></span> Live MySQL updates enabled</div>
+        <div id="lastUpdated" class="last-updated">Last updated: never</div>
       </div>
     </div>
 
@@ -544,8 +570,15 @@
     }
 
     let allApplications = [];
+    let refreshTimerId = null;
+    let isLoadingData = false;
 
     async function loadData() {
+      if (isLoadingData) {
+        return;
+      }
+
+      isLoadingData = true;
       try {
         document.getElementById('loadingSpinner').style.display = 'block';
         document.getElementById('applicationsTable').style.display = 'none';
@@ -560,7 +593,9 @@
           return;
         }
 
-        const res = await fetch(`${apiBaseUrl}/applications`);
+        const res = await fetch(`${apiBaseUrl}/applications?ts=${Date.now()}`, {
+          cache: 'no-store'
+        });
         const data = await res.json();
         allApplications = data;
 
@@ -587,6 +622,8 @@
         document.getElementById('applicationsTable').style.display = 'table';
         document.getElementById('loadingSpinner').style.display = 'none';
         updateStats();
+        filterTable();
+        document.getElementById('lastUpdated').textContent = `Last updated: ${new Date().toLocaleString()}`;
       } catch (error) {
         console.error('Error loading data:', error);
         document.getElementById('loadingSpinner').style.display = 'none';
@@ -595,6 +632,8 @@
           ? '<p>⚠️ Could not connect to backend. Update the first URL in config.js to your live public backend URL.</p>'
           : '<p>⚠️ Error loading applications. Please try again.</p>';
         document.getElementById('noData').style.display = 'block';
+      } finally {
+        isLoadingData = false;
       }
     }
 
@@ -671,6 +710,27 @@
 
     // Load data when page loads
     window.addEventListener('load', loadData);
+
+    // Keep the dashboard synced with the latest MySQL records.
+    window.addEventListener('load', () => {
+      refreshTimerId = window.setInterval(() => {
+        if (document.visibilityState === 'visible') {
+          loadData();
+        }
+      }, 5000);
+    });
+
+    window.addEventListener('beforeunload', () => {
+      if (refreshTimerId) {
+        window.clearInterval(refreshTimerId);
+      }
+    });
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        loadData();
+      }
+    });
   </script>
 </body>
 </html>
