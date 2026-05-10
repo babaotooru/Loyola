@@ -690,8 +690,22 @@
     }
 
     let autoRefreshInterval = null;
+    let isDatabaseAvailable = true;
 
-    async function hydrateStudent() {
+    async function checkDatabaseAvailability() {
+      try {
+        const response = await fetch('/health');
+        const data = await response.json();
+        isDatabaseAvailable = data.mysql === 'connected';
+        if (!isDatabaseAvailable) {
+          window.location.href = 'database-setup.html';
+        }
+        return isDatabaseAvailable;
+      } catch (error) {
+        isDatabaseAvailable = false;
+        return false;
+      }
+    }
       const session = getSession();
       const name = document.getElementById('name');
       const email = document.getElementById('email');
@@ -787,9 +801,12 @@
       await hydrateStudent();
     });
 
-    window.addEventListener('load', () => {
-      hydrateStudent();
-      startAutoHydrate();
+    window.addEventListener('load', async () => {
+      const dbAvailable = await checkDatabaseAvailability();
+      if (dbAvailable) {
+        hydrateStudent();
+        startAutoHydrate();
+      }
     });
 
     window.addEventListener('beforeunload', stopAutoHydrate);

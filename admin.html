@@ -1042,6 +1042,19 @@
     }
 
     window.addEventListener('load', async () => {
+      // Check database availability first
+      try {
+        const response = await fetch('/health');
+        const data = await response.json();
+        if (data.mysql !== 'connected') {
+          window.location.href = 'database-setup.html';
+          return;
+        }
+      } catch (error) {
+        window.location.href = 'database-setup.html';
+        return;
+      }
+
       bindEvents();
       const hasAccess = await verifyAdminSession();
       if (!hasAccess) {

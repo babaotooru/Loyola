@@ -7,7 +7,10 @@ import os
 import secrets
 
 import mysql.connector
-from mysql.connector import Error
+from mysql.connector import Error as MySQLError
+import psycopg2
+import psycopg2.extras
+from psycopg2 import OperationalError as PGOperationalError
 from fastapi import Depends, FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
@@ -32,11 +35,15 @@ DEFAULT_ADMIN_PASSWORD = "Loyola@2004"
 SESSION_DAYS = 30
 
 # MySQL configuration
+# DB config: prefer DATABASE_URL (Supabase). Fallback to MYSQL_* for local dev.
+DATABASE_URL = os.getenv("DATABASE_URL") or os.getenv("SUPABASE_DATABASE_URL")
 MYSQL_HOST = os.getenv("MYSQL_HOST", "localhost")
 MYSQL_USER = os.getenv("MYSQL_USER", "root")
 MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD", "Baba@1531")
 MYSQL_DB = os.getenv("MYSQL_DB", "college")
 
+# runtime flags (kept as mysql_* names for frontend compatibility)
+DB_TYPE = "postgres" if DATABASE_URL else "mysql"
 mysql_available = False
 mysql_connection_error = None
 
@@ -80,6 +87,9 @@ def hash_token(token: str) -> str:
 
 
 def get_server_connection():
+    """Return a server-level connection. For Postgres we return a normal connection (DB already exists on Supabase)."""
+    if DB_TYPE == "postgres":
+        return psycopg2.connect(DATABASE_URL, cursor_factory=psycopg2.extras.RealDictCursor, connect_timeout=10)
     return mysql.connector.connect(
         host=MYSQL_HOST,
         user=MYSQL_USER,
@@ -91,109 +101,185 @@ def get_server_connection():
 
 
 def get_mysql_connection():
+    """Return a DB connection for the configured DB_TYPE. Name kept for compatibility."""
     try:
-        return mysql.connector.connect(
-            host=MYSQL_HOST,
-            user=MYSQL_USER,
-            password=MYSQL_PASSWORD,
-            database=MYSQL_DB,
-            connection_timeout=5,
-        )
-    except Error as e:
-        print(f"MySQL connection error: {e}")
+        if DB_TYPE == "postgres":
+            conn = psycopg2.connect(DATABASE_URL, cursor_factory=psycopg2.extras.RealDictCursor, connect_timeout=5)
+            return conn
+        else:
+            return mysql.connector.connect(
+                host=MYSQL_HOST,
+                user=MYSQL_USER,
+                password=MYSQL_PASSWORD,
+                database=MYSQL_DB,
+                connection_timeout=5,
+            )
+    except Exception as e:
+        print(f"DB connection error: {e}")
         return None
 
 
 
 def init_mysql():
-    """Initialize MySQL connection and create tables if needed."""
+    """Initialize database (MySQL or Postgres) and create tables if needed."""
     global mysql_available, mysql_connection_error
     try:
-        print(f"🔄 Attempting MySQL connection to {MYSQL_HOST}:{MYSQL_DB}...")
-        conn = get_server_connection()
-        cursor = conn.cursor()
+        if DB_TYPE == "postgres":
+            print(f"🔄 Attempting Postgres connection via DATABASE_URL...")
+            conn = psycopg2.connect(DATABASE_URL, cursor_factory=psycopg2.extras.RealDictCursor, connect_timeout=10)
+            cursor = conn.cursor()
 
-        cursor.execute(
-            f"CREATE DATABASE IF NOT EXISTS `{MYSQL_DB}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
-        )
-        cursor.execute(f"USE `{MYSQL_DB}`")
-
-        cursor.execute(
-            """
-            CREATE TABLE IF NOT EXISTS accounts (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                full_name VARCHAR(255) NOT NULL,
-                username VARCHAR(255) UNIQUE,
-                email VARCHAR(255) UNIQUE,
-                phone VARCHAR(20) UNIQUE,
-                password_hash VARCHAR(255) NOT NULL,
-                role VARCHAR(20) NOT NULL DEFAULT 'student',
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-            """
-        )
-
-        cursor.execute(
-            """
-            CREATE TABLE IF NOT EXISTS sessions (
-                token_hash VARCHAR(64) PRIMARY KEY,
-                account_id INT NOT NULL,
-                role VARCHAR(20) NOT NULL,
-                expires_at DATETIME NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                INDEX(account_id),
-                INDEX(role)
-            )
-            """
-        )
-
-        cursor.execute(
-            """
-            CREATE TABLE IF NOT EXISTS admissions (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                account_id INT NOT NULL,
-                name VARCHAR(255) NOT NULL,
-                email VARCHAR(255) NOT NULL,
-                phone VARCHAR(20) NOT NULL,
-                course VARCHAR(255) NOT NULL,
-                submitted_at VARCHAR(255),
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-            """
-        )
-
-        cursor.execute(
-            "SELECT id FROM accounts WHERE role = 'admin' AND username = %s LIMIT 1",
-            (DEFAULT_ADMIN_USERNAME,),
-        )
-        if not cursor.fetchone():
+            # Create tables if they do not exist (Postgres)
             cursor.execute(
                 """
-                INSERT INTO accounts (full_name, username, email, phone, password_hash, role)
-                VALUES (%s, %s, %s, %s, %s, 'admin')
-                """,
-                (
-                    DEFAULT_ADMIN_USERNAME,
-                    DEFAULT_ADMIN_USERNAME,
-                    None,
-                    None,
-                    hash_password(DEFAULT_ADMIN_PASSWORD),
-                ),
+                CREATE TABLE IF NOT EXISTS accounts (
+                    id SERIAL PRIMARY KEY,
+                    full_name VARCHAR(255) NOT NULL,
+                    username VARCHAR(255) UNIQUE,
+                    email VARCHAR(255) UNIQUE,
+                    phone VARCHAR(20) UNIQUE,
+                    password_hash VARCHAR(255) NOT NULL,
+                    role VARCHAR(20) NOT NULL DEFAULT 'student',
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+                )
+                """
             )
 
-        conn.commit()
-        cursor.close()
-        conn.close()
+            cursor.execute(
+                """
+                CREATE TABLE IF NOT EXISTS sessions (
+                    token_hash VARCHAR(64) PRIMARY KEY,
+                    account_id INTEGER NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+                    role VARCHAR(20) NOT NULL,
+                    expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+                )
+                """
+            )
 
-        mysql_available = True
-        mysql_connection_error = None
-        print("✅ MySQL connected successfully!")
-        return True
-    except Error as e:
+            cursor.execute(
+                """
+                CREATE TABLE IF NOT EXISTS admissions (
+                    id SERIAL PRIMARY KEY,
+                    account_id INTEGER NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+                    name VARCHAR(255) NOT NULL,
+                    email VARCHAR(255) NOT NULL,
+                    phone VARCHAR(20) NOT NULL,
+                    course VARCHAR(255) NOT NULL,
+                    submitted_at TIMESTAMP WITH TIME ZONE,
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+                )
+                """
+            )
+
+            # Indexes
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_sessions_account ON sessions(account_id)")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_sessions_role ON sessions(role)")
+
+            # Ensure an admin account exists
+            cursor.execute("SELECT id FROM accounts WHERE role = 'admin' AND username = %s LIMIT 1", (DEFAULT_ADMIN_USERNAME,))
+            if not cursor.fetchone():
+                cursor.execute(
+                    "INSERT INTO accounts (full_name, username, email, phone, password_hash, role) VALUES (%s, %s, %s, %s, %s, 'admin')",
+                    (DEFAULT_ADMIN_USERNAME, DEFAULT_ADMIN_USERNAME, None, None, hash_password(DEFAULT_ADMIN_PASSWORD)),
+                )
+
+            conn.commit()
+            cursor.close()
+            conn.close()
+            mysql_available = True
+            mysql_connection_error = None
+            print("✅ Postgres connected and schema verified/created.")
+            return True
+
+        else:
+            # existing MySQL behavior
+            print(f"🔄 Attempting MySQL connection to {MYSQL_HOST}:{MYSQL_DB}...")
+            conn = get_server_connection()
+            cursor = conn.cursor()
+
+            cursor.execute(
+                f"CREATE DATABASE IF NOT EXISTS `{MYSQL_DB}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
+            )
+            cursor.execute(f"USE `{MYSQL_DB}`")
+
+            cursor.execute(
+                """
+                CREATE TABLE IF NOT EXISTS accounts (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    full_name VARCHAR(255) NOT NULL,
+                    username VARCHAR(255) UNIQUE,
+                    email VARCHAR(255) UNIQUE,
+                    phone VARCHAR(20) UNIQUE,
+                    password_hash VARCHAR(255) NOT NULL,
+                    role VARCHAR(20) NOT NULL DEFAULT 'student',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+                """
+            )
+
+            cursor.execute(
+                """
+                CREATE TABLE IF NOT EXISTS sessions (
+                    token_hash VARCHAR(64) PRIMARY KEY,
+                    account_id INT NOT NULL,
+                    role VARCHAR(20) NOT NULL,
+                    expires_at DATETIME NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    INDEX(account_id),
+                    INDEX(role)
+                )
+                """
+            )
+
+            cursor.execute(
+                """
+                CREATE TABLE IF NOT EXISTS admissions (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    account_id INT NOT NULL,
+                    name VARCHAR(255) NOT NULL,
+                    email VARCHAR(255) NOT NULL,
+                    phone VARCHAR(20) NOT NULL,
+                    course VARCHAR(255) NOT NULL,
+                    submitted_at VARCHAR(255),
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+                """
+            )
+
+            cursor.execute(
+                "SELECT id FROM accounts WHERE role = 'admin' AND username = %s LIMIT 1",
+                (DEFAULT_ADMIN_USERNAME,),
+            )
+            if not cursor.fetchone():
+                cursor.execute(
+                    """
+                    INSERT INTO accounts (full_name, username, email, phone, password_hash, role)
+                    VALUES (%s, %s, %s, %s, %s, 'admin')
+                    """,
+                    (
+                        DEFAULT_ADMIN_USERNAME,
+                        DEFAULT_ADMIN_USERNAME,
+                        None,
+                        None,
+                        hash_password(DEFAULT_ADMIN_PASSWORD),
+                    ),
+                )
+
+            conn.commit()
+            cursor.close()
+            conn.close()
+
+            mysql_available = True
+            mysql_connection_error = None
+            print("✅ MySQL connected successfully!")
+            return True
+    except Exception as e:
         mysql_available = False
         mysql_connection_error = str(e)
-        print(f"❌ MySQL connection failed: {e}")
-        print(f"   Host: {MYSQL_HOST}, User: {MYSQL_USER}, DB: {MYSQL_DB}")
+        print(f"❌ DB initialization failed: {e}")
+        if DB_TYPE == "mysql":
+            print(f"   Host: {MYSQL_HOST}, User: {MYSQL_USER}, DB: {MYSQL_DB}")
         return False
 
 
@@ -244,7 +330,7 @@ def get_account_from_token(authorization: Optional[str]) -> dict:
     token_hash = hash_token(token)
 
     try:
-        cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor(dictionary=True)
         cursor.execute(
             """
             SELECT s.token_hash, s.account_id, s.role, s.expires_at,
@@ -462,11 +548,14 @@ def mysql_status():
             if conn:
                 cursor = conn.cursor()
                 cursor.execute("SELECT COUNT(*) as count FROM admissions")
-                applications_count = cursor.fetchone()[0]
+                r = cursor.fetchone()
+                applications_count = r['count'] if isinstance(r, dict) else r[0]
                 cursor.execute("SELECT COUNT(*) as count FROM accounts WHERE role = 'student'")
-                students_count = cursor.fetchone()[0]
+                r = cursor.fetchone()
+                students_count = r['count'] if isinstance(r, dict) else r[0]
                 cursor.execute("SELECT COUNT(*) as count FROM accounts WHERE role = 'admin'")
-                admins_count = cursor.fetchone()[0]
+                r = cursor.fetchone()
+                admins_count = r['count'] if isinstance(r, dict) else r[0]
                 cursor.close()
                 conn.close()
                 return {
@@ -536,14 +625,25 @@ def auth_register(payload: StudentRegister):
             conn.close()
             raise HTTPException(status_code=409, detail="An account with this email or phone already exists")
 
-        cursor.execute(
-            """
-            INSERT INTO accounts (full_name, email, phone, password_hash, role)
-            VALUES (%s, %s, %s, %s, 'student')
-            """,
-            (full_name, email, phone, hash_password(password)),
-        )
-        account_id = cursor.lastrowid
+        if DB_TYPE == 'postgres':
+            cursor.execute(
+                """
+                INSERT INTO accounts (full_name, email, phone, password_hash, role)
+                VALUES (%s, %s, %s, %s, 'student') RETURNING id
+                """,
+                (full_name, email, phone, hash_password(password)),
+            )
+            row = cursor.fetchone()
+            account_id = row['id'] if isinstance(row, dict) else row[0]
+        else:
+            cursor.execute(
+                """
+                INSERT INTO accounts (full_name, email, phone, password_hash, role)
+                VALUES (%s, %s, %s, %s, 'student')
+                """,
+                (full_name, email, phone, hash_password(password)),
+            )
+            account_id = cursor.lastrowid
         conn.commit()
         cursor.close()
         conn.close()
@@ -832,7 +932,12 @@ def cleanup_applications(_current_account: dict = Depends(require_admin_account)
         cursor = conn.cursor()
         cursor.execute("SELECT id, course FROM admissions ORDER BY id")
         rows = cursor.fetchall()
-        ids_to_delete = [row[0] for row in rows if row[1] not in allowed_courses]
+        def row_get_item(r, idx_or_key):
+            if isinstance(r, dict):
+                return r.get(idx_or_key)
+            return r[idx_or_key]
+
+        ids_to_delete = [row_get_item(row, 'id') if isinstance(row, dict) else row_get_item(row, 0) for row in rows if (row_get_item(row, 'course') if isinstance(row, dict) else row_get_item(row, 1)) not in allowed_courses]
         before_count = len(rows)
 
         deleted_count = 0
@@ -842,8 +947,9 @@ def cleanup_applications(_current_account: dict = Depends(require_admin_account)
             conn.commit()
             deleted_count = cursor.rowcount
 
-        cursor.execute("SELECT COUNT(*) FROM admissions")
-        after_count = cursor.fetchone()[0]
+        cursor.execute("SELECT COUNT(*) as count FROM admissions")
+        r = cursor.fetchone()
+        after_count = r['count'] if isinstance(r, dict) else r[0]
 
         cursor.close()
         conn.close()

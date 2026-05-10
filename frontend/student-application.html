@@ -215,6 +215,21 @@
     }
     function show(id, msg) { const ok=document.getElementById('ok'); const err=document.getElementById('err'); ok.style.display='none'; err.style.display='none'; if (!id) return; const n=document.getElementById(id); n.textContent=msg; n.style.display='block'; }
     
+    async function checkDatabaseAvailability() {
+      try {
+        const response = await fetch('/health');
+        const data = await response.json();
+        if (data.mysql !== 'connected') {
+          window.location.href = 'database-setup.html';
+          return false;
+        }
+        return true;
+      } catch (error) {
+        window.location.href = 'database-setup.html';
+        return false;
+      }
+    }
+
     async function hydrateStudentData() {
       try {
         const me = await apiFetch('/auth/me', { method: 'GET' }, true);
@@ -229,6 +244,9 @@
     }
 
     async function ensureStudentSession() {
+      const dbAvailable = await checkDatabaseAvailability();
+      if (!dbAvailable) return;
+      
       const s = getSession();
       if (!s?.token || s.role !== 'student') { window.location.href = 'student-login.html'; return; }
       hydrateStudentData();
