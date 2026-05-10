@@ -502,8 +502,10 @@ def student_application_page_html():
     return FileResponse(os.path.join(BASE_DIR, "student-application.html"))
 
 
-# Initialize MySQL on startup
-init_mysql()
+# Initialize DB on FastAPI startup (avoid import-time DB connections)
+@app.on_event("startup")
+def on_startup_initialize_db():
+    init_mysql()
 
 
 class ApplicationRequest(BaseModel):
