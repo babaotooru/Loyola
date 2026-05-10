@@ -1,12 +1,11 @@
-// Backend URLs to try in order.
-// 1) Put your PUBLIC backend URL first (required for all devices on any network).
-// 2) Keep LAN and localhost as fallback for local testing.
-// Replace the first value below with your deployed backend URL.
+﻿// Backend URLs to try in order.
+// Keep localhost first for development so the latest local backend is used.
 window.API_BASE_URLS = [
-	'https://loyola-rvgj.onrender.com',
-	'http://10.179.54.212:8000',
-	'http://127.0.0.1:8000'
+  'http://127.0.0.1:8002',
+  'http://127.0.0.1:8001',
+  'http://127.0.0.1:8000',
+  'http://10.179.54.212:8002',
+  'https://loyola-rvgj.onrender.com'
 ];
 
-// Backward compatibility: if old code reads API_BASE_URL, keep first value.
 window.API_BASE_URL = window.API_BASE_URLS[0] || '';
