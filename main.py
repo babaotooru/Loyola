@@ -618,6 +618,36 @@ def mysql_status():
     }
 
 
+@app.get("/debug/db-test")
+def db_test():
+    """Debug endpoint to test actual database connection and report errors."""
+    try:
+        settings = build_postgres_connection_settings()
+        conn = psycopg2.connect(**settings)
+        cursor = conn.cursor()
+        cursor.execute("SELECT 1")
+        cursor.fetchone()
+        cursor.close()
+        conn.close()
+        return {
+            "status": "connected",
+            "database": "online",
+            "message": "Supabase connection successful",
+            "timestamp": datetime.now().isoformat(),
+        }
+    except Exception as e:
+        error_str = str(e)
+        return {
+            "status": "failed",
+            "database": "offline",
+            "error_type": type(e).__name__,
+            "error_message": error_str,
+            "database_url_set": bool(os.environ.get("DATABASE_URL")),
+            "supabase_host_set": bool(os.environ.get("SUPABASE_DB_HOST")),
+            "timestamp": datetime.now().isoformat(),
+        }
+
+
 @app.get("/auth/me")
 def auth_me(authorization: Optional[str] = Header(default=None)):
     account = get_account_from_token(authorization)
