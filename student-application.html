@@ -1,117 +1,255 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Student Application - Loyola Admissions</title>
+  <title>Course Selection - Loyola Degree College YSRR</title>
   <style>
     :root {
-      --green-900: #173f2a;
-      --green-800: #1d5335;
-      --green-700: #2a7048;
-      --ink-900: #11251a;
-      --ink-600: #4f6459;
+      --green-950: #0f2f20;
+      --green-900: #17462e;
+      --green-800: #1f5a3a;
+      --green-700: #2b724a;
+      --gold-500: #c9a74b;
+      --ink-900: #1b2c22;
+      --ink-600: #4f6257;
       --surface: #ffffff;
-      --surface-soft: #f4f8f5;
-      --border: rgba(23, 63, 42, 0.18);
-      --focus: rgba(42, 112, 72, 0.24);
-      --shadow: 0 18px 42px rgba(17, 37, 26, 0.14);
+      --surface-soft: #f5f8f5;
+      --border: rgba(23, 70, 46, 0.16);
+      --shadow-md: 0 14px 28px rgba(15, 47, 32, 0.12);
+      --radius-lg: 16px;
     }
 
     * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
 
     body {
       margin: 0;
-      font-family: "Segoe UI", Verdana, sans-serif;
-      background:
-        radial-gradient(circle at 8% 10%, rgba(42, 112, 72, 0.14), transparent 32%),
-        linear-gradient(145deg, #edf4ef, #e7f0ea);
+      font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
       color: var(--ink-900);
+      background:
+        radial-gradient(circle at 12% 8%, rgba(43, 114, 74, 0.14), transparent 34%),
+        radial-gradient(circle at 88% 12%, rgba(201, 167, 75, 0.1), transparent 26%),
+        linear-gradient(180deg, #f1f7f3 0%, #eef4f0 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
     }
 
-    .wrap { max-width: 980px; margin: 42px auto; padding: 0 18px; }
+    a { color: inherit; text-decoration: none; }
+
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(14px);
+      background: rgba(15, 47, 32, 0.92);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .nav {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #fff;
+    }
+
+    .brand-mark {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      font-family: Georgia, serif;
+      font-weight: 700;
+      background: linear-gradient(140deg, var(--gold-500), #e4cd8f);
+      color: #2a2a1f;
+      box-shadow: 0 10px 22px rgba(0,0,0,.24);
+      flex: 0 0 auto;
+    }
+
+    .brand-text { font-weight: 700; letter-spacing: .2px; }
+
+    .nav-links {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .nav-link {
+      color: rgba(255, 255, 255, 0.88);
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: .9rem;
+      transition: background .2s ease, color .2s ease;
+      cursor: pointer;
+    }
+
+    .nav-link:hover { background: rgba(255, 255, 255, 0.12); color: #fff; }
+
+    .progress-wrapper {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 24px 20px;
+    }
+
+    .progress-indicator {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .progress-step {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: .95rem;
+      color: var(--ink-600);
+    }
+
+    .step-number {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: var(--surface);
+      border: 2px solid var(--border);
+      font-weight: 700;
+      color: var(--green-900);
+    }
+
+    .progress-step.active .step-number {
+      background: var(--green-700);
+      color: #fff;
+      border-color: var(--green-700);
+    }
+
+    .progress-step.completed .step-number {
+      background: var(--green-800);
+      color: #fff;
+      border-color: var(--green-800);
+    }
+
+    .main-content {
+      flex: 1;
+      max-width: 760px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 0 20px 40px;
+    }
 
     .card {
       background: var(--surface);
-      border-radius: 20px;
-      padding: 28px;
-      box-shadow: var(--shadow);
+      border-radius: var(--radius-lg);
+      padding: 32px;
+      box-shadow: var(--shadow-md);
       border: 1px solid var(--border);
     }
 
-    h1 {
-      margin: 0 0 6px;
+    .card h1 {
+      margin: 0 0 8px;
       font-family: Georgia, serif;
+      font-size: 1.8rem;
       color: var(--green-900);
-      letter-spacing: 0.2px;
     }
 
-    p { margin: 0 0 18px; color: var(--ink-600); line-height: 1.6; }
+    .card p {
+      margin: 0 0 20px;
+      color: var(--ink-600);
+      line-height: 1.6;
+    }
 
-    #appForm { display: grid; gap: 12px; }
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 14px;
+    }
 
-    .row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
-
-    .field { margin: 0; }
+    .field { display: grid; margin-bottom: 14px; }
 
     label {
       display: block;
-      margin-bottom: 7px;
+      margin-bottom: 8px;
       font-weight: 700;
       color: var(--green-900);
-      font-size: 0.92rem;
+      font-size: .95rem;
     }
 
-    input,
-    select {
+    input, select {
       width: 100%;
       min-height: 46px;
-      padding: 11px 12px;
       border: 1px solid var(--border);
-      border-radius: 12px;
+      border-radius: 10px;
+      padding: 11px 14px;
       font: inherit;
       color: var(--ink-900);
       background: var(--surface);
       outline: none;
-      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      transition: border-color .2s ease, box-shadow .2s ease;
     }
 
-    input:focus,
-    select:focus {
+    input:focus, select:focus {
       border-color: var(--green-700);
-      box-shadow: 0 0 0 4px var(--focus);
+      box-shadow: 0 0 0 4px rgba(43, 114, 74, 0.12);
     }
 
     input[readonly] {
       background: var(--surface-soft);
       color: var(--ink-600);
+      cursor: not-allowed;
+    }
+
+    .field-hint {
+      font-size: .85rem;
+      color: var(--ink-600);
+      margin-top: 4px;
     }
 
     .actions {
       display: flex;
-      gap: 10px;
+      gap: 12px;
       flex-wrap: wrap;
-      margin-top: 4px;
+      margin-top: 12px;
       align-items: center;
     }
 
     button {
-      background: linear-gradient(145deg, var(--green-900), var(--green-700));
+      background: linear-gradient(140deg, var(--green-900), var(--green-700));
       color: #fff;
       border: 0;
-      border-radius: 12px;
+      border-radius: 10px;
       min-height: 46px;
-      padding: 0 18px;
+      padding: 0 20px;
       font: inherit;
       font-weight: 700;
       cursor: pointer;
-      box-shadow: 0 12px 26px rgba(23, 63, 42, 0.22);
+      box-shadow: 0 8px 18px rgba(23, 70, 46, 0.2);
+      transition: transform .2s ease, box-shadow .2s ease;
     }
 
-    .ghost {
-      background: var(--surface);
+    button:hover:not(:disabled) { transform: translateY(-2px); }
+    button:disabled { opacity: 0.7; cursor: not-allowed; }
+
+    .btn-secondary {
+      background: #ffffff;
       color: var(--green-900);
-      border: 1px solid rgba(23, 63, 42, 0.34);
+      border: 1px solid var(--green-700);
       box-shadow: none;
     }
 
@@ -119,169 +257,399 @@
       color: var(--green-900);
       text-decoration: none;
       font-weight: 700;
-      border: 1px solid rgba(23, 63, 42, 0.14);
+      border: 1px solid var(--border);
       border-radius: 10px;
-      padding: 10px 12px;
+      padding: 10px 14px;
       background: var(--surface-soft);
+      transition: background .2s ease, border-color .2s ease;
+      display: inline-block;
     }
 
-    .msg { display: none; margin-top: 14px; padding: 10px 12px; border-radius: 10px; }
-    .ok { background: #e5f3e9; color: #16452d; border: 1px solid #bfdac7; }
-    .err { background: #fdeceb; color: #8b2f2a; border: 1px solid #efc3bf; }
+    .link:hover { background: #fff; border-color: var(--green-700); }
+
+    .review-box {
+      display: none;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #fbfdfb;
+      padding: 18px;
+      margin-top: 14px;
+    }
+
+    .review-title {
+      margin: 0 0 8px;
+      font-weight: 700;
+      color: var(--green-900);
+      font-size: 1.08rem;
+    }
+
+    .message {
+      display: none;
+      margin-top: 12px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      font-size: .95rem;
+      line-height: 1.55;
+    }
+
+    .message.ok {
+      background: #e8f5ec;
+      color: #1b5939;
+      border: 1px solid #bfdcc8;
+    }
+
+    .message.err {
+      background: #fdeceb;
+      color: #8b2f2a;
+      border: 1px solid #efc3bf;
+    }
+
+    footer {
+      margin-top: auto;
+      background: linear-gradient(140deg, var(--green-950), var(--green-800));
+      color: rgba(255, 255, 255, 0.92);
+      text-align: center;
+      padding: 20px 12px;
+      font-size: .9rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+    }
 
     @media (max-width: 760px) {
-      .wrap { margin-top: 28px; }
+      .nav { padding: 10px 15px; }
+      .progress-wrapper { padding: 16px 15px; }
+      .main-content { padding: 0 15px 30px; }
       .card { padding: 20px; }
-      .row { grid-template-columns: 1fr; gap: 12px; }
-      .actions button,
-      .actions .link { width: 100%; text-align: center; }
+      .card h1 { font-size: 1.5rem; }
+      .info-grid { grid-template-columns: 1fr; }
+      .actions button, .actions .link { width: 100%; text-align: center; }
+      .progress-step { font-size: .85rem; gap: 4px; }
+      .step-number { width: 28px; height: 28px; font-size: .9rem; }
     }
   </style>
 </head>
 <body>
-  <div class="wrap">
+  <header class="site-header">
+    <nav class="nav">
+      <div class="brand">
+        <div class="brand-mark">LC</div>
+        <div class="brand-text">Loyola Degree College YSRR</div>
+      </div>
+      <div class="nav-links">
+        <a class="nav-link" href="student-register.html">Register</a>
+        <a class="nav-link" href="student-login.html">Login</a>
+        <a class="nav-link" href="admin-login.html" style="background: linear-gradient(140deg, #c9a74b, #e4cd8f); color: #2a2a1f; padding: 8px 14px; border-radius: 8px; font-weight: 700;">Admin Panel</a>
+      </div>
+    </nav>
+  </header>
+
+  <div class="progress-wrapper">
+    <div class="progress-indicator">
+      <div class="progress-step completed">
+        <div class="step-number">1</div>
+        <span>Create Account</span>
+      </div>
+      <div class="progress-step completed">
+        <div class="step-number">2</div>
+        <span>Login</span>
+      </div>
+      <div class="progress-step active">
+        <div class="step-number">3</div>
+        <span>Course Selection</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-content">
     <div class="card">
-      <h1>Student Application</h1>
-      <p>Submit your admission request. Data is saved directly to MySQL.</p>
-      <form id="appForm">
-        <div class="row">
+      <h1>Admission Application</h1>
+      <p>Fill in details, review your admission information, edit if needed, then complete your application.</p>
+
+      <div id="entrySection">
+        <div class="info-grid">
           <div class="field">
-            <label for="name">Name</label>
-            <input id="name" readonly>
+            <label for="name">Your Name</label>
+            <input id="name" type="text" readonly>
           </div>
           <div class="field">
             <label for="email">Email</label>
-            <input id="email" readonly>
+            <input id="email" type="email" readonly>
           </div>
         </div>
-        <div class="row">
+
+        <div class="info-grid">
           <div class="field">
             <label for="phone">Phone</label>
-            <input id="phone" readonly>
+            <input id="phone" type="tel" readonly>
           </div>
           <div class="field">
-            <label for="course">Course</label>
+            <label for="course">Select Your Course *</label>
             <select id="course" required>
-              <option value="">Select Course</option>
+              <option value="">Choose a program</option>
               <option value="B.Sc - Quantum Technologies">B.Sc - Quantum Technologies</option>
               <option value="B.Sc - Data Science">B.Sc - Data Science</option>
               <option value="B.Sc - Computer Science">B.Sc - Computer Science</option>
-              
-              
+            </select>
+            <div class="field-hint">Select the course you wish to pursue</div>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button id="reviewBtn" type="button">Review Admission Details</button>
+          <a class="link" href="student-login.html" id="logoutLink">Logout</a>
+        </div>
+      </div>
+
+      <div id="reviewBox" class="review-box">
+        <div class="review-title">Your Admission Details</div>
+        <p>Please verify all details below. If needed, edit them here before final submission.</p>
+
+        <div class="info-grid">
+          <div class="field">
+            <label for="reviewName">Full Name</label>
+            <input id="reviewName" type="text" required>
+          </div>
+          <div class="field">
+            <label for="reviewEmail">Email</label>
+            <input id="reviewEmail" type="email" required>
+          </div>
+        </div>
+
+        <div class="info-grid">
+          <div class="field">
+            <label for="reviewPhone">Phone</label>
+            <input id="reviewPhone" type="tel" required>
+          </div>
+          <div class="field">
+            <label for="reviewCourse">Course</label>
+            <select id="reviewCourse" required>
+              <option value="">Choose a program</option>
+              <option value="B.Sc - Quantum Technologies">B.Sc - Quantum Technologies</option>
+              <option value="B.Sc - Data Science">B.Sc - Data Science</option>
+              <option value="B.Sc - Computer Science">B.Sc - Computer Science</option>
             </select>
           </div>
         </div>
+
         <div class="actions">
-          <button id="submitBtn" type="submit">Submit Application</button>
-          <button id="logoutBtn" type="button" class="ghost">Logout</button>
-          <a class="link" href="student-login.html">Student Login</a>
-          <a class="link" href="index.html">Home</a>
+          <button id="completeBtn" type="button">Complete Application</button>
+          <button id="editBtn" type="button" class="btn-secondary">Edit Again</button>
         </div>
-      </form>
-      <div id="ok" class="msg ok"></div>
-      <div id="err" class="msg err"></div>
+      </div>
+
+      <div id="okMessage" class="message ok"></div>
+      <div id="errMessage" class="message err"></div>
     </div>
   </div>
+
+  <footer>
+    © 2026 Loyola Degree College YSRR. All rights reserved. | Excellence in Education
+  </footer>
+
   <script src="config.js"></script>
   <script>
     const SESSION_KEY = 'loyola_portal_session';
     let resolvedApiBaseUrl = null;
-    let autoRefreshInterval = null;
 
-    const normalizeBaseUrl = (url) => String(url || '').trim().replace(/\/+$/, '');
-    function getSession() { try { const raw = localStorage.getItem(SESSION_KEY); return raw ? JSON.parse(raw) : null; } catch { return null; } }
-    function clearSession() { localStorage.removeItem(SESSION_KEY); }
+    function normalizeBaseUrl(url) {
+      return String(url || '').trim().replace(/\/+$/, '');
+    }
+
     function getApiCandidates() {
-      const out = [];
-      if (Array.isArray(window.API_BASE_URLS)) window.API_BASE_URLS.forEach((u) => { const n = normalizeBaseUrl(u); if (n) out.push(n); });
-      const single = normalizeBaseUrl(window.API_BASE_URL); if (single) out.push(single);
-      if (window.location.protocol.startsWith('http')) out.push(normalizeBaseUrl(window.location.origin));
-      if (window.location.protocol === 'file:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') { out.push('http://127.0.0.1:8002'); out.push('http://127.0.0.1:8001'); }
-      return [...new Set(out)].filter(Boolean);
-    }
-    async function canReachApi(base) { try { const r = await fetch(`${base}/health`); return r.ok; } catch { return false; } }
-    async function resolveApiBaseUrl() { if (resolvedApiBaseUrl) return resolvedApiBaseUrl; for (const c of getApiCandidates()) { if (await canReachApi(c)) { resolvedApiBaseUrl = c; return c; } } return getApiCandidates()[0] || ''; }
-    async function apiFetch(path, options = {}, withToken = true) {
-      const base = await resolveApiBaseUrl(); if (!base) throw new Error('Backend URL not configured');
-      const headers = new Headers(options.headers || {});
-      if (!headers.has('Content-Type') && options.body) headers.set('Content-Type', 'application/json');
-      if (withToken) {
-        const s = getSession(); if (s?.token) headers.set('Authorization', `Bearer ${s.token}`);
+      const candidates = [];
+      if (Array.isArray(window.API_BASE_URLS)) {
+        window.API_BASE_URLS.forEach((url) => {
+          const normalized = normalizeBaseUrl(url);
+          if (normalized) candidates.push(normalized);
+        });
       }
-      const res = await fetch(`${base}${path}`, { ...options, headers });
-      const ct = res.headers.get('content-type') || ''; const data = ct.includes('application/json') ? await res.json() : await res.text();
-      if (!res.ok) throw new Error((data && data.detail) || data || `HTTP ${res.status}`);
-      return data;
+      const single = normalizeBaseUrl(window.API_BASE_URL);
+      if (single) candidates.push(single);
+      if (window.location.protocol.startsWith('http')) candidates.push(normalizeBaseUrl(window.location.origin));
+      if (window.location.protocol === 'file:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        candidates.push('http://127.0.0.1:8002');
+        candidates.push('http://127.0.0.1:8001');
+      }
+      return [...new Set(candidates)].filter(Boolean);
     }
-    function show(id, msg) { const ok=document.getElementById('ok'); const err=document.getElementById('err'); ok.style.display='none'; err.style.display='none'; if (!id) return; const n=document.getElementById(id); n.textContent=msg; n.style.display='block'; }
-    
-    async function checkDatabaseAvailability() {
+
+    function getSession() {
       try {
-        const response = await fetch('/health');
-        const data = await response.json();
-        if (data.mysql !== 'connected') {
-          window.location.href = 'database-setup.html';
-          return false;
-        }
-        return true;
-      } catch (error) {
-        window.location.href = 'database-setup.html';
+        const raw = localStorage.getItem(SESSION_KEY);
+        return raw ? JSON.parse(raw) : null;
+      } catch {
+        return null;
+      }
+    }
+
+    function clearSession() {
+      localStorage.removeItem(SESSION_KEY);
+    }
+
+    async function canReachApi(baseUrl) {
+      try {
+        const res = await fetch(`${baseUrl}/health`);
+        return res.ok;
+      } catch {
         return false;
       }
     }
 
-    async function hydrateStudentData() {
-      try {
-        const me = await apiFetch('/auth/me', { method: 'GET' }, true);
-        if (!me?.account || me.account.role !== 'student') throw new Error('Invalid session');
-        document.getElementById('name').value = me.account.full_name || '';
-        document.getElementById('email').value = me.account.email || '';
-        document.getElementById('phone').value = me.account.phone || '';
-      } catch {
-        clearSession();
-        window.location.href = 'student-login.html';
+    async function resolveApiBaseUrl() {
+      if (resolvedApiBaseUrl) return resolvedApiBaseUrl;
+      for (const candidate of getApiCandidates()) {
+        if (await canReachApi(candidate)) {
+          resolvedApiBaseUrl = candidate;
+          return candidate;
+        }
       }
+      return getApiCandidates()[0] || '';
     }
 
-    async function ensureStudentSession() {
-      const dbAvailable = await checkDatabaseAvailability();
-      if (!dbAvailable) return;
-      
-      const s = getSession();
-      if (!s?.token || s.role !== 'student') { window.location.href = 'student-login.html'; return; }
-      hydrateStudentData();
-      startAutoHydrate();
+    async function getPortalUrl(path) {
+      const baseUrl = await resolveApiBaseUrl();
+      const origin = baseUrl || (window.location.protocol.startsWith('http') ? window.location.origin : 'http://127.0.0.1:8002');
+      return `${origin}${path}`;
     }
 
-    function startAutoHydrate() {
-      if (autoRefreshInterval) clearInterval(autoRefreshInterval);
-      autoRefreshInterval = setInterval(hydrateStudentData, 4000);
+    async function apiFetch(path, options = {}, withToken = false) {
+      const apiBaseUrl = await resolveApiBaseUrl();
+      if (!apiBaseUrl) throw new Error('Backend URL is not configured');
+
+      const headers = new Headers(options.headers || {});
+      if (!headers.has('Content-Type') && options.body) headers.set('Content-Type', 'application/json');
+
+      if (withToken) {
+        const session = getSession();
+        if (session?.token) headers.set('Authorization', `Bearer ${session.token}`);
+      }
+
+      const res = await fetch(`${apiBaseUrl}${path}`, { ...options, headers });
+      const contentType = res.headers.get('content-type') || '';
+      const data = contentType.includes('application/json') ? await res.json() : await res.text();
+      if (!res.ok) {
+        const detail = typeof data === 'object' && data !== null ? data.detail : data;
+        throw new Error(detail || `Request failed with status ${res.status}`);
+      }
+      return data;
     }
 
-    function stopAutoHydrate() {
-      if (autoRefreshInterval) { clearInterval(autoRefreshInterval); autoRefreshInterval = null; }
+    function showMessage(kind, text) {
+      const okNode = document.getElementById('okMessage');
+      const errNode = document.getElementById('errMessage');
+      okNode.style.display = 'none';
+      errNode.style.display = 'none';
+      if (!kind) return;
+      const node = kind === 'ok' ? okNode : errNode;
+      node.textContent = text;
+      node.style.display = 'block';
     }
 
-    document.getElementById('appForm').addEventListener('submit', async (e) => {
-      e.preventDefault(); const btn=document.getElementById('submitBtn'); const old=btn.textContent; btn.disabled=true; btn.textContent='Submitting...'; show(null,'');
+    function copyToReviewFields() {
+      document.getElementById('reviewName').value = document.getElementById('name').value.trim();
+      document.getElementById('reviewEmail').value = document.getElementById('email').value.trim();
+      document.getElementById('reviewPhone').value = document.getElementById('phone').value.trim();
+      document.getElementById('reviewCourse').value = document.getElementById('course').value;
+    }
+
+    function showReviewBox() {
+      document.getElementById('reviewBox').style.display = 'block';
+      document.getElementById('entrySection').style.display = 'none';
+    }
+
+    function showEntryBox() {
+      document.getElementById('reviewBox').style.display = 'none';
+      document.getElementById('entrySection').style.display = 'block';
+    }
+
+    document.getElementById('reviewBtn').addEventListener('click', () => {
+      showMessage(null, '');
+      const course = document.getElementById('course').value;
+      if (!course) {
+        showMessage('err', 'Please select your course before reviewing details.');
+        return;
+      }
+      copyToReviewFields();
+      showReviewBox();
+    });
+
+    document.getElementById('editBtn').addEventListener('click', () => {
+      // If user edits course in review, bring it back to entry section for consistency.
+      document.getElementById('course').value = document.getElementById('reviewCourse').value;
+      showEntryBox();
+    });
+
+    document.getElementById('logoutLink').addEventListener('click', async (event) => {
+      event.preventDefault();
+      clearSession();
+      window.location.href = await getPortalUrl('/student-login.html');
+    });
+
+    window.addEventListener('load', async () => {
       try {
-        const course = document.getElementById('course').value;
-        const data = await apiFetch('/apply', { method:'POST', body: JSON.stringify({ course }) }, true);
-        show('ok', `Application submitted successfully at ${data.submitted_at}`);
-        document.getElementById('course').value = '';
-      } catch (err) { show('err', err.message || 'Submission failed'); }
-      finally { btn.disabled=false; btn.textContent=old; }
-    });
-    
-    document.getElementById('logoutBtn').addEventListener('click', async () => {
-      stopAutoHydrate();
-      try { await apiFetch('/auth/logout', { method: 'POST' }, true); } catch {}
-      clearSession(); window.location.href = 'student-login.html';
+        const session = getSession();
+        if (!session || !session.token) {
+          showMessage('err', 'Please login first');
+          setTimeout(async () => {
+            window.location.href = await getPortalUrl('/student-login.html');
+          }, 700);
+          return;
+        }
+
+        const meData = await apiFetch('/auth/me', {}, true);
+        if (meData?.account) {
+          const identifier = String(session.identifier || '').trim();
+          const fallbackEmail = identifier.includes('@') ? identifier : '';
+          const fallbackPhone = /^\d{7,15}$/.test(identifier) ? identifier : '';
+
+          document.getElementById('name').value = meData.account.full_name || '';
+          document.getElementById('email').value = meData.account.email || fallbackEmail;
+          document.getElementById('phone').value = meData.account.phone || fallbackPhone;
+        }
+      } catch (error) {
+        showMessage('err', 'Session expired. Please login again.');
+        setTimeout(async () => {
+          clearSession();
+          window.location.href = await getPortalUrl('/student-login.html');
+        }, 700);
+      }
     });
 
-    window.addEventListener('load', ensureStudentSession);
-    window.addEventListener('beforeunload', stopAutoHydrate);
+    document.getElementById('completeBtn').addEventListener('click', async () => {
+      showMessage(null, '');
+
+      const completeBtn = document.getElementById('completeBtn');
+      const originalText = completeBtn.textContent;
+      completeBtn.disabled = true;
+      completeBtn.textContent = 'Completing...';
+
+      try {
+        const payload = {
+          name: document.getElementById('reviewName').value.trim(),
+          email: document.getElementById('reviewEmail').value.trim(),
+          phone: document.getElementById('reviewPhone').value.trim(),
+          course: document.getElementById('reviewCourse').value,
+        };
+
+        if (!payload.name || !payload.email || !payload.phone || !payload.course) {
+          throw new Error('Please fill all details before completing application.');
+        }
+
+        await apiFetch('/apply', {
+          method: 'POST',
+          body: JSON.stringify(payload),
+        }, true);
+
+        showMessage('ok', 'Your admission details are saved. Application completed successfully. Redirecting to home page...');
+        setTimeout(async () => {
+          window.location.href = await getPortalUrl('/index.html');
+        }, 1400);
+      } catch (error) {
+        showMessage('err', error.message || 'Could not complete application');
+      } finally {
+        completeBtn.disabled = false;
+        completeBtn.textContent = originalText;
+      }
+    });
   </script>
 </body>
 </html>
-

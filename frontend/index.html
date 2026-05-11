@@ -1,9 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Loyola Degree College YSRR - Real-time Admissions</title>
+  <title>Loyola Degree College YSRR - Admissions Portal</title>
   <style>
     :root {
       --green-950: #0f2f20;
@@ -24,7 +24,6 @@
     }
 
     * { box-sizing: border-box; }
-
     html { scroll-behavior: smooth; }
 
     body {
@@ -33,7 +32,7 @@
       color: var(--ink-900);
       background:
         radial-gradient(circle at 12% 8%, rgba(43, 114, 74, 0.14), transparent 34%),
-        radial-gradient(circle at 88% 12%, rgba(201, 167, 75, 0.1), transparent 26%),
+        radial-gradient(circle at 88% 12%, rgba(201, 167, 75, 0.10), transparent 26%),
         linear-gradient(180deg, #f1f7f3 0%, #eef4f0 100%);
     }
 
@@ -81,7 +80,13 @@
       flex: 0 0 auto;
     }
 
-    .brand-text { font-weight: 700; letter-spacing: .2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .brand-text {
+      font-weight: 700;
+      letter-spacing: .2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
 
     .nav-links {
       display: flex;
@@ -122,7 +127,6 @@
         radial-gradient(circle at 72% 22%, rgba(255, 255, 255, 0.2), transparent 36%);
       color: #fff;
       box-shadow: var(--shadow-lg);
-      animation: reveal .55s ease both;
     }
 
     .hero-inner {
@@ -170,7 +174,7 @@
     .about-card,
     .image-card,
     .program-card,
-    .apply-card,
+    .cta-card,
     .contact-card {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -202,8 +206,8 @@
 
     .image-card img {
       width: 100%;
-      height: 100%;
       border-radius: 12px;
+      display: block;
       object-fit: cover;
       min-height: 280px;
     }
@@ -245,131 +249,40 @@
       font-size: .95rem;
     }
 
-    .apply-wrap { max-width: 900px; margin: 0 auto; }
+    .cta-wrap { max-width: 900px; margin: 0 auto; }
 
-    .apply-card {
-      padding: 28px;
+    .cta-card {
+      padding: 30px;
       border-top: 5px solid var(--green-800);
+      text-align: center;
     }
 
-    #admissionForm {
-      display: grid;
-      gap: 12px;
+    .cta-card p {
+      margin: 0 0 20px;
+      color: var(--ink-600);
+      line-height: 1.7;
+      font-size: 1rem;
     }
 
-    .field-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 14px;
-    }
-
-    .field { margin-bottom: 0; }
-
-    .field.field-span-2 {
-      grid-column: span 2;
-    }
-
-    .field label {
-      display: block;
-      margin-bottom: 7px;
-      font-weight: 700;
-      color: var(--green-900);
-      font-size: .92rem;
-    }
-
-    .field input,
-    .field select {
-      width: 100%;
-      min-height: 46px;
-      border-radius: 12px;
-      border: 1px solid rgba(23, 70, 46, 0.2);
-      padding: 11px 12px;
-      font: inherit;
-      color: var(--ink-900);
-      background: #fff;
-      outline: none;
-      transition: border-color .2s ease, box-shadow .2s ease;
-    }
-
-    .field input:focus,
-    .field select:focus {
-      border-color: var(--green-700);
-      box-shadow: 0 0 0 4px rgba(43,114,74,.16);
-    }
-
-    .field input[readonly] {
-      background: var(--surface-soft);
-      cursor: not-allowed;
-    }
-
-    .form-actions {
-      margin-top: 4px;
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
+    .cta-btn {
+      display: inline-flex;
       align-items: center;
-    }
-
-    .btn {
-      border: 0;
-      cursor: pointer;
+      justify-content: center;
+      min-height: 48px;
+      padding: 0 24px;
       border-radius: 12px;
-      min-height: 46px;
-      padding: 0 16px;
+      border: 0;
       font: inherit;
       font-weight: 700;
+      color: #fff;
+      background: linear-gradient(140deg, var(--green-900), var(--green-700));
+      box-shadow: 0 10px 20px rgba(16,58,37,.25);
       transition: transform .2s ease, box-shadow .2s ease;
     }
 
-    .btn:hover { transform: translateY(-1px); }
-
-    .btn-primary {
-      background: linear-gradient(140deg, var(--green-900), var(--green-700));
-      color: #fff;
-      box-shadow: 0 10px 20px rgba(16,58,37,.25);
-    }
-
-    .btn-secondary {
-      background: #fff;
-      color: var(--green-900);
-      border: 1px solid var(--green-700);
-    }
-
-    .inline-links {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .inline-link {
-      padding: 9px 11px;
-      border-radius: 9px;
-      border: 1px solid rgba(23,70,46,.16);
-      color: var(--green-900);
-      font-size: .9rem;
-      background: #fff;
-      font-weight: 700;
-    }
-
-    .notice {
-      display: none;
-      margin-top: 12px;
-      padding: 10px 12px;
-      border-radius: 10px;
-      font-size: .92rem;
-      line-height: 1.55;
-    }
-
-    .notice.ok {
-      background: #e8f5ec;
-      color: #1b5939;
-      border: 1px solid #bfdcc8;
-    }
-
-    .notice.err {
-      background: #fdeceb;
-      color: #8b2f2a;
-      border: 1px solid #efc3bf;
+    .cta-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 14px 26px rgba(16,58,37,.30);
     }
 
     .contact-grid {
@@ -406,11 +319,6 @@
       font-size: .92rem;
     }
 
-    @keyframes reveal {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
     @media (max-width: 980px) {
       .about-grid,
       .program-grid,
@@ -423,15 +331,11 @@
       .nav { padding: 12px; }
       .hero { padding: 20px 14px 0; }
       .section { padding: 40px 14px 0; }
-      .field-grid { grid-template-columns: 1fr; gap: 12px; }
-      .apply-card,
+      .cta-card,
       .about-card,
       .contact-card,
       .program-card { padding: 16px; }
-      .form-actions .btn,
-      .inline-links,
-      .inline-link { width: 100%; }
-      .inline-link { text-align: center; }
+      .cta-btn { width: 100%; }
     }
   </style>
 </head>
@@ -500,44 +404,10 @@
 
   <section id="admissions" class="section">
     <h2 class="section-title">Apply for Admission</h2>
-    <div class="apply-wrap">
-      <article class="apply-card">
-        <form id="admissionForm">
-          <div class="field-grid">
-            <div class="field">
-              <label for="name">Full Name</label>
-              <input id="name" placeholder="Enter your full name">
-            </div>
-            <div class="field">
-              <label for="email">Email Address</label>
-              <input id="email" type="email" placeholder="Enter your email">
-            </div>
-            <div class="field">
-              <label for="phone">Phone Number</label>
-              <input id="phone" placeholder="Enter your phone number">
-            </div>
-            <div class="field">
-              <label for="course">Select Program of Interest</label>
-              <select id="course" required>
-                <option value="">Select a Program</option>
-                <option value="B.Sc - Quantum Technologies">B.Sc - Quantum Technologies</option>
-                <option value="B.Sc - Data Science">B.Sc - Data Science</option>
-                <option value="B.Sc - Computer Science">B.Sc - Computer Science</option>
-              </select>
-            </div>
-          </div>
-          <div class="form-actions">
-            <button class="btn btn-primary" id="submitBtn" type="submit">Submit Application</button>
-            <button class="btn btn-secondary" id="logoutBtn" type="button">Logout</button>
-            <div class="inline-links">
-              <a class="inline-link" href="student-register.html">Student Registration</a>
-              <a class="inline-link" href="student-login.html">Student Login</a>
-              <a class="inline-link" href="student-application.html">Student Workspace</a>
-            </div>
-          </div>
-        </form>
-        <div id="ok" class="notice ok"></div>
-        <div id="err" class="notice err"></div>
+    <div class="cta-wrap">
+      <article class="cta-card">
+        <p>Start your admission process in 3 simple steps: create your student account, sign in, and submit your course selection. All data is stored securely and shown in real time on the admin panel.</p>
+        <a class="cta-btn" href="student-register.html">Start Admission Process</a>
       </article>
     </div>
   </section>
@@ -563,255 +433,5 @@
   <footer>
     © 2026 Loyola Degree College YSRR. All rights reserved. | Excellence in Education
   </footer>
-
-  <script src="config.js"></script>
-  <script>
-    const SESSION_KEY = 'loyola_portal_session';
-    let resolvedApiBaseUrl = null;
-
-    function normalizeBaseUrl(url) {
-      return String(url || '').trim().replace(/\/+$/, '');
-    }
-
-    function getApiCandidates() {
-      const candidates = [];
-
-      if (Array.isArray(window.API_BASE_URLS)) {
-        window.API_BASE_URLS.forEach((url) => {
-          const normalized = normalizeBaseUrl(url);
-          if (normalized) {
-            candidates.push(normalized);
-          }
-        });
-      }
-
-      const singleConfigUrl = normalizeBaseUrl(window.API_BASE_URL);
-      if (singleConfigUrl) {
-        candidates.push(singleConfigUrl);
-      }
-
-      if (window.location.protocol.startsWith('http')) {
-        candidates.push(normalizeBaseUrl(window.location.origin));
-      }
-
-      if (window.location.protocol === 'file:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-        candidates.push('http://127.0.0.1:8002');
-        candidates.push('http://127.0.0.1:8001');
-      }
-
-      return [...new Set(candidates)].filter(Boolean);
-    }
-
-    function getSession() {
-      try {
-        const raw = localStorage.getItem(SESSION_KEY);
-        return raw ? JSON.parse(raw) : null;
-      } catch {
-        return null;
-      }
-    }
-
-    function clearSession() {
-      localStorage.removeItem(SESSION_KEY);
-    }
-
-    async function canReachApi(baseUrl) {
-      try {
-        const res = await fetch(`${baseUrl}/health`);
-        return res.ok;
-      } catch {
-        return false;
-      }
-    }
-
-    async function resolveApiBaseUrl() {
-      if (resolvedApiBaseUrl) {
-        return resolvedApiBaseUrl;
-      }
-
-      const candidates = getApiCandidates();
-      for (const candidate of candidates) {
-        if (await canReachApi(candidate)) {
-          resolvedApiBaseUrl = candidate;
-          return candidate;
-        }
-      }
-
-      return candidates[0] || '';
-    }
-
-    async function apiFetch(path, options = {}, withToken = false) {
-      const apiBaseUrl = await resolveApiBaseUrl();
-      if (!apiBaseUrl) {
-        throw new Error('Backend URL is not configured');
-      }
-
-      const headers = new Headers(options.headers || {});
-      if (!headers.has('Content-Type') && options.body) {
-        headers.set('Content-Type', 'application/json');
-      }
-
-      if (withToken) {
-        const session = getSession();
-        if (session?.token) {
-          headers.set('Authorization', `Bearer ${session.token}`);
-        }
-      }
-
-      const res = await fetch(`${apiBaseUrl}${path}`, {
-        ...options,
-        headers,
-      });
-
-      const contentType = res.headers.get('content-type') || '';
-      const data = contentType.includes('application/json') ? await res.json() : await res.text();
-
-      if (!res.ok) {
-        const detail = typeof data === 'object' && data !== null ? data.detail : data;
-        throw new Error(detail || `Request failed with status ${res.status}`);
-      }
-
-      return data;
-    }
-
-    function showMessage(kind, text) {
-      const ok = document.getElementById('ok');
-      const err = document.getElementById('err');
-      ok.style.display = 'none';
-      err.style.display = 'none';
-
-      if (!kind) {
-        return;
-      }
-
-      const node = kind === 'ok' ? ok : err;
-      node.textContent = text;
-      node.style.display = 'block';
-    }
-
-    let autoRefreshInterval = null;
-    let isDatabaseAvailable = true;
-
-    async function checkDatabaseAvailability() {
-      try {
-        const response = await fetch('/health');
-        const data = await response.json();
-        isDatabaseAvailable = data.mysql === 'connected';
-        if (!isDatabaseAvailable) {
-          window.location.href = 'database-setup.html';
-        }
-        return isDatabaseAvailable;
-      } catch (error) {
-        isDatabaseAvailable = false;
-        return false;
-      }
-    }
-      const session = getSession();
-      const name = document.getElementById('name');
-      const email = document.getElementById('email');
-      const phone = document.getElementById('phone');
-
-      if (!session?.token || session.role !== 'student') {
-        name.readOnly = false;
-        email.readOnly = false;
-        phone.readOnly = false;
-        return;
-      }
-
-      try {
-        const me = await apiFetch('/auth/me', { method: 'GET' }, true);
-        if (!me?.account || me.account.role !== 'student') {
-          throw new Error('Student login required');
-        }
-
-        name.value = me.account.full_name || '';
-        email.value = me.account.email || '';
-        phone.value = me.account.phone || '';
-        name.readOnly = true;
-        email.readOnly = true;
-        phone.readOnly = true;
-      } catch {
-        clearSession();
-        name.readOnly = false;
-        email.readOnly = false;
-        phone.readOnly = false;
-      }
-    }
-
-    function startAutoHydrate() {
-      if (autoRefreshInterval) clearInterval(autoRefreshInterval);
-      autoRefreshInterval = setInterval(hydrateStudent, 5000);
-    }
-
-    function stopAutoHydrate() {
-      if (autoRefreshInterval) {
-        clearInterval(autoRefreshInterval);
-        autoRefreshInterval = null;
-      }
-    }
-
-    document.getElementById('admissionForm').addEventListener('submit', async (event) => {
-      event.preventDefault();
-      showMessage(null, '');
-
-      const submitBtn = document.getElementById('submitBtn');
-      const original = submitBtn.textContent;
-      submitBtn.disabled = true;
-      submitBtn.textContent = 'Submitting...';
-
-      try {
-        const course = document.getElementById('course').value;
-        if (!course) {
-          throw new Error('Please select a program');
-        }
-
-        const session = getSession();
-        if (!session?.token || session.role !== 'student') {
-          showMessage('err', 'Please login as student to submit application. Redirecting to student login...');
-          setTimeout(() => { window.location.href = 'student-login.html'; }, 900);
-          return;
-        }
-
-        const result = await apiFetch('/apply', {
-          method: 'POST',
-          body: JSON.stringify({ course }),
-        }, true);
-
-        showMessage('ok', `Application submitted successfully at ${result.submitted_at}. Your entry is now live in admin dashboard.`);
-        document.getElementById('course').value = '';
-      } catch (error) {
-        const msg = (error.message || '').toLowerCase().includes('token')
-          ? 'Session expired. Please login again.'
-          : (error.message || 'Could not submit application');
-        showMessage('err', msg);
-      } finally {
-        submitBtn.disabled = false;
-        submitBtn.textContent = original;
-      }
-    });
-
-    document.getElementById('logoutBtn').addEventListener('click', async () => {
-      stopAutoHydrate();
-      try {
-        await apiFetch('/auth/logout', { method: 'POST' }, true);
-      } catch {
-      }
-      clearSession();
-      showMessage('ok', 'Logged out successfully.');
-      await hydrateStudent();
-    });
-
-    window.addEventListener('load', async () => {
-      const dbAvailable = await checkDatabaseAvailability();
-      if (dbAvailable) {
-        hydrateStudent();
-        startAutoHydrate();
-      }
-    });
-
-    window.addEventListener('beforeunload', stopAutoHydrate);
-  </script>
 </body>
 </html>
-
-

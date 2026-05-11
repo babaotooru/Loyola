@@ -1,0 +1,817 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Loyola Degree College YSRR - Real-time Admissions</title>
+  <style>
+    :root {
+      --green-950: #0f2f20;
+      --green-900: #17462e;
+      --green-800: #1f5a3a;
+      --green-700: #2b724a;
+      --green-100: #e8f4ed;
+      --gold-500: #c9a74b;
+      --ink-900: #1b2c22;
+      --ink-600: #4f6257;
+      --surface: #ffffff;
+      --surface-soft: #f5f8f5;
+      --border: rgba(23, 70, 46, 0.16);
+      --shadow-lg: 0 24px 60px rgba(15, 47, 32, 0.16);
+      --shadow-md: 0 14px 28px rgba(15, 47, 32, 0.12);
+      --radius-xl: 24px;
+      --radius-lg: 16px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
+      color: var(--ink-900);
+      background:
+        radial-gradient(circle at 12% 8%, rgba(43, 114, 74, 0.14), transparent 34%),
+        radial-gradient(circle at 88% 12%, rgba(201, 167, 75, 0.1), transparent 26%),
+        linear-gradient(180deg, #f1f7f3 0%, #eef4f0 100%);
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(14px);
+      background: rgba(15, 47, 32, 0.92);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .nav {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 14px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #fff;
+      min-width: 0;
+    }
+
+    .brand-mark {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      font-family: Georgia, serif;
+      font-weight: 700;
+      background: linear-gradient(140deg, var(--gold-500), #e4cd8f);
+      color: #2a2a1f;
+      box-shadow: 0 10px 22px rgba(0,0,0,.24);
+      flex: 0 0 auto;
+    }
+
+    .brand-text { font-weight: 700; letter-spacing: .2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .nav-links {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .nav-link {
+      color: rgba(255, 255, 255, 0.88);
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-size: .92rem;
+      transition: background .2s ease, color .2s ease;
+    }
+
+    .nav-link:hover { background: rgba(255,255,255,.12); color: #fff; }
+
+    .admin-pill {
+      color: #153122;
+      background: linear-gradient(140deg, #f2e4b4, #d7b96a);
+      font-weight: 700;
+      padding: 10px 12px;
+      border-radius: 10px;
+    }
+
+    .hero {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 34px 20px 10px;
+    }
+
+    .hero-shell {
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+      background:
+        linear-gradient(135deg, rgba(16, 58, 37, 0.94), rgba(36, 98, 63, 0.9)),
+        radial-gradient(circle at 72% 22%, rgba(255, 255, 255, 0.2), transparent 36%);
+      color: #fff;
+      box-shadow: var(--shadow-lg);
+      animation: reveal .55s ease both;
+    }
+
+    .hero-inner {
+      min-height: 280px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      padding: 48px 20px;
+    }
+
+    .hero h1 {
+      margin: 0 0 10px;
+      font-family: Georgia, serif;
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      letter-spacing: .2px;
+    }
+
+    .hero p {
+      margin: 0;
+      color: rgba(255,255,255,.92);
+      font-size: 1.05rem;
+    }
+
+    .section {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 56px 20px 0;
+    }
+
+    .section-title {
+      margin: 0 0 24px;
+      text-align: center;
+      font-family: Georgia, serif;
+      color: var(--green-900);
+      font-size: clamp(1.7rem, 3vw, 2.4rem);
+    }
+
+    .about-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      align-items: stretch;
+    }
+
+    .about-card,
+    .image-card,
+    .program-card,
+    .apply-card,
+    .contact-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+    }
+
+    .about-card { padding: 24px; }
+
+    .about-card h3 {
+      margin: 0 0 12px;
+      font-family: Georgia, serif;
+      color: var(--green-900);
+      font-size: 1.7rem;
+    }
+
+    .about-card p {
+      margin: 0 0 14px;
+      color: var(--ink-600);
+      line-height: 1.72;
+    }
+
+    .image-card {
+      padding: 12px;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+    }
+
+    .image-card img {
+      width: 100%;
+      height: 100%;
+      border-radius: 12px;
+      object-fit: cover;
+      min-height: 280px;
+    }
+
+    .program-group-title {
+      margin: 0 0 14px;
+      font-weight: 700;
+      color: var(--green-900);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 1.08rem;
+    }
+
+    .program-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .program-card {
+      padding: 18px;
+      border-top: 4px solid var(--green-700);
+      transition: transform .2s ease, box-shadow .2s ease;
+    }
+
+    .program-card:hover { transform: translateY(-2px); }
+
+    .program-card h4 {
+      margin: 0 0 8px;
+      color: var(--green-900);
+      font-size: 1.05rem;
+    }
+
+    .program-card p {
+      margin: 0;
+      color: var(--ink-600);
+      line-height: 1.62;
+      font-size: .95rem;
+    }
+
+    .apply-wrap { max-width: 900px; margin: 0 auto; }
+
+    .apply-card {
+      padding: 28px;
+      border-top: 5px solid var(--green-800);
+    }
+
+    #admissionForm {
+      display: grid;
+      gap: 12px;
+    }
+
+    .field-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .field { margin-bottom: 0; }
+
+    .field.field-span-2 {
+      grid-column: span 2;
+    }
+
+    .field label {
+      display: block;
+      margin-bottom: 7px;
+      font-weight: 700;
+      color: var(--green-900);
+      font-size: .92rem;
+    }
+
+    .field input,
+    .field select {
+      width: 100%;
+      min-height: 46px;
+      border-radius: 12px;
+      border: 1px solid rgba(23, 70, 46, 0.2);
+      padding: 11px 12px;
+      font: inherit;
+      color: var(--ink-900);
+      background: #fff;
+      outline: none;
+      transition: border-color .2s ease, box-shadow .2s ease;
+    }
+
+    .field input:focus,
+    .field select:focus {
+      border-color: var(--green-700);
+      box-shadow: 0 0 0 4px rgba(43,114,74,.16);
+    }
+
+    .field input[readonly] {
+      background: var(--surface-soft);
+      cursor: not-allowed;
+    }
+
+    .form-actions {
+      margin-top: 4px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .btn {
+      border: 0;
+      cursor: pointer;
+      border-radius: 12px;
+      min-height: 46px;
+      padding: 0 16px;
+      font: inherit;
+      font-weight: 700;
+      transition: transform .2s ease, box-shadow .2s ease;
+    }
+
+    .btn:hover { transform: translateY(-1px); }
+
+    .btn-primary {
+      background: linear-gradient(140deg, var(--green-900), var(--green-700));
+      color: #fff;
+      box-shadow: 0 10px 20px rgba(16,58,37,.25);
+    }
+
+    .btn-secondary {
+      background: #fff;
+      color: var(--green-900);
+      border: 1px solid var(--green-700);
+    }
+
+    .inline-links {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .inline-link {
+      padding: 9px 11px;
+      border-radius: 9px;
+      border: 1px solid rgba(23,70,46,.16);
+      color: var(--green-900);
+      font-size: .9rem;
+      background: #fff;
+      font-weight: 700;
+    }
+
+    .notice {
+      display: none;
+      margin-top: 12px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-size: .92rem;
+      line-height: 1.55;
+    }
+
+    .notice.ok {
+      background: #e8f5ec;
+      color: #1b5939;
+      border: 1px solid #bfdcc8;
+    }
+
+    .notice.err {
+      background: #fdeceb;
+      color: #8b2f2a;
+      border: 1px solid #efc3bf;
+    }
+
+    .contact-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 30px;
+    }
+
+    .contact-card {
+      text-align: center;
+      padding: 18px;
+    }
+
+    .contact-card h4 {
+      margin: 0 0 8px;
+      color: var(--green-900);
+      font-size: 1rem;
+    }
+
+    .contact-card p {
+      margin: 0;
+      line-height: 1.6;
+      color: var(--ink-600);
+      font-size: .94rem;
+    }
+
+    footer {
+      margin-top: 20px;
+      background: linear-gradient(140deg, var(--green-950), var(--green-800));
+      color: rgba(255,255,255,.95);
+      text-align: center;
+      padding: 16px 12px;
+      font-size: .92rem;
+    }
+
+    @keyframes reveal {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 980px) {
+      .about-grid,
+      .program-grid,
+      .contact-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .nav { padding: 12px; }
+      .hero { padding: 20px 14px 0; }
+      .section { padding: 40px 14px 0; }
+      .field-grid { grid-template-columns: 1fr; gap: 12px; }
+      .apply-card,
+      .about-card,
+      .contact-card,
+      .program-card { padding: 16px; }
+      .form-actions .btn,
+      .inline-links,
+      .inline-link { width: 100%; }
+      .inline-link { text-align: center; }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <nav class="nav">
+      <div class="brand">
+        <div class="brand-mark">LC</div>
+        <div class="brand-text">Loyola Degree College YSRR</div>
+      </div>
+      <div class="nav-links">
+        <a class="nav-link" href="#home">Home</a>
+        <a class="nav-link" href="#about">About</a>
+        <a class="nav-link" href="#programs">Courses</a>
+        <a class="nav-link" href="#admissions">Admissions</a>
+        <a class="nav-link" href="#contact">Contact</a>
+        <a class="admin-pill" href="admin-login.html">Admin Panel</a>
+      </div>
+    </nav>
+  </header>
+
+  <section id="home" class="hero">
+    <div class="hero-shell">
+      <div class="hero-inner">
+        <div>
+          <h1>Welcome to Loyola Degree College YSRR</h1>
+          <p>Excellence in Education • Building Future Leaders</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="about" class="section">
+    <h2 class="section-title">About Our College</h2>
+    <div class="about-grid">
+      <article class="about-card">
+        <h3>Loyola Degree College YSRR</h3>
+        <p>Loyola Degree College YSRR is a premier institution dedicated to providing quality education and fostering intellectual growth. Our experienced faculty and modern infrastructure create an environment where students excel academically and develop as responsible citizens.</p>
+        <p><strong>Our Mission:</strong> To impart quality education that enables students to face modern-world challenges with confidence and integrity.</p>
+        <p><strong>Our Vision:</strong> To be a center of excellence in higher education, producing graduates who are competent, ethical, and committed to nation-building.</p>
+      </article>
+      <aside class="image-card">
+        <img src="photo.png" alt="Loyola Degree College campus">
+      </aside>
+    </div>
+  </section>
+
+  <section id="programs" class="section">
+    <h2 class="section-title">Our Programs</h2>
+    <div class="program-group-title">Bachelor of Science (B.Sc) Programs</div>
+    <div class="program-grid">
+      <article class="program-card">
+        <h4>B.Sc Quantum Technologies</h4>
+        <p>Curriculum focused on quantum computing, quantum information, and emerging technologies.</p>
+      </article>
+      <article class="program-card">
+        <h4>B.Sc Data Science</h4>
+        <p>Comprehensive data science curriculum covering statistics, machine learning, and practical data engineering.</p>
+      </article>
+      <article class="program-card">
+        <h4>B.Sc Computer Science</h4>
+        <p>Core computer science program emphasizing programming, algorithms, and software development.</p>
+      </article>
+    </div>
+  </section>
+
+  <section id="admissions" class="section">
+    <h2 class="section-title">Apply for Admission</h2>
+    <div class="apply-wrap">
+      <article class="apply-card">
+        <form id="admissionForm">
+          <div class="field-grid">
+            <div class="field">
+              <label for="name">Full Name</label>
+              <input id="name" placeholder="Enter your full name">
+            </div>
+            <div class="field">
+              <label for="email">Email Address</label>
+              <input id="email" type="email" placeholder="Enter your email">
+            </div>
+            <div class="field">
+              <label for="phone">Phone Number</label>
+              <input id="phone" placeholder="Enter your phone number">
+            </div>
+            <div class="field">
+              <label for="course">Select Program of Interest</label>
+              <select id="course" required>
+                <option value="">Select a Program</option>
+                <option value="B.Sc - Quantum Technologies">B.Sc - Quantum Technologies</option>
+                <option value="B.Sc - Data Science">B.Sc - Data Science</option>
+                <option value="B.Sc - Computer Science">B.Sc - Computer Science</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button class="btn btn-primary" id="submitBtn" type="submit">Submit Application</button>
+            <button class="btn btn-secondary" id="logoutBtn" type="button">Logout</button>
+            <div class="inline-links">
+              <a class="inline-link" href="student-register.html">Student Registration</a>
+              <a class="inline-link" href="student-login.html">Student Login</a>
+              <a class="inline-link" href="student-application.html">Student Workspace</a>
+            </div>
+          </div>
+        </form>
+        <div id="ok" class="notice ok"></div>
+        <div id="err" class="notice err"></div>
+      </article>
+    </div>
+  </section>
+
+  <section id="contact" class="section">
+    <h2 class="section-title">Get in Touch</h2>
+    <div class="contact-grid">
+      <article class="contact-card">
+        <h4>Location</h4>
+        <p>Loyola Degree College YSRR<br>C68M+Q6G, Boggalupalli,<br>Andhra Pradesh 516391</p>
+      </article>
+      <article class="contact-card">
+        <h4>Contact</h4>
+        <p>Mr. M. Ramana Reddy (HOD)<br>Phone: +91 99850 24734<br>Email: admissions@loyola.edu.in</p>
+      </article>
+      <article class="contact-card">
+        <h4>Hours</h4>
+        <p>Mon - Fri: 9:00 AM - 5:00 PM<br>Sat: 10:00 AM - 2:00 PM</p>
+      </article>
+    </div>
+  </section>
+
+  <footer>
+    © 2026 Loyola Degree College YSRR. All rights reserved. | Excellence in Education
+  </footer>
+
+  <script src="config.js"></script>
+  <script>
+    const SESSION_KEY = 'loyola_portal_session';
+    let resolvedApiBaseUrl = null;
+
+    function normalizeBaseUrl(url) {
+      return String(url || '').trim().replace(/\/+$/, '');
+    }
+
+    function getApiCandidates() {
+      const candidates = [];
+
+      if (Array.isArray(window.API_BASE_URLS)) {
+        window.API_BASE_URLS.forEach((url) => {
+          const normalized = normalizeBaseUrl(url);
+          if (normalized) {
+            candidates.push(normalized);
+          }
+        });
+      }
+
+      const singleConfigUrl = normalizeBaseUrl(window.API_BASE_URL);
+      if (singleConfigUrl) {
+        candidates.push(singleConfigUrl);
+      }
+
+      if (window.location.protocol.startsWith('http')) {
+        candidates.push(normalizeBaseUrl(window.location.origin));
+      }
+
+      if (window.location.protocol === 'file:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        candidates.push('http://127.0.0.1:8002');
+        candidates.push('http://127.0.0.1:8001');
+      }
+
+      return [...new Set(candidates)].filter(Boolean);
+    }
+
+    function getSession() {
+      try {
+        const raw = localStorage.getItem(SESSION_KEY);
+        return raw ? JSON.parse(raw) : null;
+      } catch {
+        return null;
+      }
+    }
+
+    function clearSession() {
+      localStorage.removeItem(SESSION_KEY);
+    }
+
+    async function canReachApi(baseUrl) {
+      try {
+        const res = await fetch(`${baseUrl}/health`);
+        return res.ok;
+      } catch {
+        return false;
+      }
+    }
+
+    async function resolveApiBaseUrl() {
+      if (resolvedApiBaseUrl) {
+        return resolvedApiBaseUrl;
+      }
+
+      const candidates = getApiCandidates();
+      for (const candidate of candidates) {
+        if (await canReachApi(candidate)) {
+          resolvedApiBaseUrl = candidate;
+          return candidate;
+        }
+      }
+
+      return candidates[0] || '';
+    }
+
+    async function apiFetch(path, options = {}, withToken = false) {
+      const apiBaseUrl = await resolveApiBaseUrl();
+      if (!apiBaseUrl) {
+        throw new Error('Backend URL is not configured');
+      }
+
+      const headers = new Headers(options.headers || {});
+      if (!headers.has('Content-Type') && options.body) {
+        headers.set('Content-Type', 'application/json');
+      }
+
+      if (withToken) {
+        const session = getSession();
+        if (session?.token) {
+          headers.set('Authorization', `Bearer ${session.token}`);
+        }
+      }
+
+      const res = await fetch(`${apiBaseUrl}${path}`, {
+        ...options,
+        headers,
+      });
+
+      const contentType = res.headers.get('content-type') || '';
+      const data = contentType.includes('application/json') ? await res.json() : await res.text();
+
+      if (!res.ok) {
+        const detail = typeof data === 'object' && data !== null ? data.detail : data;
+        throw new Error(detail || `Request failed with status ${res.status}`);
+      }
+
+      return data;
+    }
+
+    function showMessage(kind, text) {
+      const ok = document.getElementById('ok');
+      const err = document.getElementById('err');
+      ok.style.display = 'none';
+      err.style.display = 'none';
+
+      if (!kind) {
+        return;
+      }
+
+      const node = kind === 'ok' ? ok : err;
+      node.textContent = text;
+      node.style.display = 'block';
+    }
+
+    let autoRefreshInterval = null;
+    let isDatabaseAvailable = true;
+
+    async function checkDatabaseAvailability() {
+      try {
+        const response = await fetch('/health');
+        const data = await response.json();
+        isDatabaseAvailable = data.database === 'configured';
+        if (!isDatabaseAvailable) {
+          window.location.href = 'database-setup.html';
+        }
+        return isDatabaseAvailable;
+      } catch (error) {
+        isDatabaseAvailable = false;
+        return false;
+      }
+    }
+      const session = getSession();
+      const name = document.getElementById('name');
+      const email = document.getElementById('email');
+      const phone = document.getElementById('phone');
+
+      if (!session?.token || session.role !== 'student') {
+        name.readOnly = false;
+        email.readOnly = false;
+        phone.readOnly = false;
+        return;
+      }
+
+      try {
+        const me = await apiFetch('/auth/me', { method: 'GET' }, true);
+        if (!me?.account || me.account.role !== 'student') {
+          throw new Error('Student login required');
+        }
+
+        name.value = me.account.full_name || '';
+        email.value = me.account.email || '';
+        phone.value = me.account.phone || '';
+        name.readOnly = true;
+        email.readOnly = true;
+        phone.readOnly = true;
+      } catch {
+        clearSession();
+        name.readOnly = false;
+        email.readOnly = false;
+        phone.readOnly = false;
+      }
+    }
+
+    function startAutoHydrate() {
+      if (autoRefreshInterval) clearInterval(autoRefreshInterval);
+      autoRefreshInterval = setInterval(hydrateStudent, 5000);
+    }
+
+    function stopAutoHydrate() {
+      if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+        autoRefreshInterval = null;
+      }
+    }
+
+    document.getElementById('admissionForm').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      showMessage(null, '');
+
+      const submitBtn = document.getElementById('submitBtn');
+      const original = submitBtn.textContent;
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Submitting...';
+
+      try {
+        const course = document.getElementById('course').value;
+        if (!course) {
+          throw new Error('Please select a program');
+        }
+
+        const session = getSession();
+        if (!session?.token || session.role !== 'student') {
+          showMessage('err', 'Please login as student to submit application. Redirecting to student login...');
+          setTimeout(() => { window.location.href = 'student-login.html'; }, 900);
+          return;
+        }
+
+        const result = await apiFetch('/apply', {
+          method: 'POST',
+          body: JSON.stringify({ course }),
+        }, true);
+
+        showMessage('ok', `Application submitted successfully at ${result.submitted_at}. Your entry is now live in admin dashboard.`);
+        document.getElementById('course').value = '';
+      } catch (error) {
+        const msg = (error.message || '').toLowerCase().includes('token')
+          ? 'Session expired. Please login again.'
+          : (error.message || 'Could not submit application');
+        showMessage('err', msg);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = original;
+      }
+    });
+
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      stopAutoHydrate();
+      try {
+        await apiFetch('/auth/logout', { method: 'POST' }, true);
+      } catch {
+      }
+      clearSession();
+      showMessage('ok', 'Logged out successfully.');
+      await hydrateStudent();
+    });
+
+    window.addEventListener('load', async () => {
+      const dbAvailable = await checkDatabaseAvailability();
+      if (dbAvailable) {
+        hydrateStudent();
+        startAutoHydrate();
+      }
+    });
+
+    window.addEventListener('beforeunload', stopAutoHydrate);
+  </script>
+</body>
+</html>
+
+

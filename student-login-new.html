@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Login - Loyola Admissions</title>
+  <style>
+    :root {
+      --green-950: #0f2f20;
+      --green-900: #17462e;
+      --green-800: #1f5a3a;
+      --green-700: #2b724a;
+      --green-100: #e8f4ed;
+      --gold-500: #c9a74b;
+      --ink-900: #1b2c22;
+      --ink-600: #4f6257;
+      --surface: #ffffff;
+      --surface-soft: #f5f8f5;
+      --border: rgba(23, 70, 46, 0.16);
+      --shadow-lg: 0 24px 60px rgba(15, 47, 32, 0.16);
+      --shadow-md: 0 14px 28px rgba(15, 47, 32, 0.12);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
+      background:
+        radial-gradient(circle at 12% 8%, rgba(43, 114, 74, 0.14), transparent 34%),
+        radial-gradient(circle at 88% 12%, rgba(201, 167, 75, 0.1), transparent 26%),
+        linear-gradient(180deg, #f1f7f3 0%, #eef4f0 100%);
+      color: var(--ink-900);
+    }
+    a { color: inherit; text-decoration: none; }
+
+    /* CONSISTENT HEADER */
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(14px);
+      background: rgba(15, 47, 32, 0.92);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .nav {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 14px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .brand { display: flex; align-items: center; gap: 10px; color: #fff; }
+    .brand-mark {
+      width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center;
+      font-family: Georgia, serif; font-weight: 700;
+      background: linear-gradient(140deg, var(--gold-500), #e4cd8f);
+      color: #2a2a1f; box-shadow: 0 10px 22px rgba(0,0,0,.24);
+      flex: 0 0 auto;
+    }
+    .brand-text { font-weight: 700; letter-spacing: .2px; }
+
+    .nav-links {
+      display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+    }
+
+    .nav-link {
+      color: rgba(255, 255, 255, 0.88);
+      padding: 10px 12px; border-radius: 10px; font-size: .92rem;
+      transition: background .2s ease, color .2s ease;
+      cursor: pointer;
+    }
+
+    .nav-link:hover { background: rgba(255, 255, 255, 0.12); color: #fff; }
+
+    .admin-pill {
+      background: linear-gradient(140deg, var(--gold-500), #e4cd8f);
+      color: #2a2a1f !important;
+      padding: 10px 14px; border-radius: 20px; font-weight: 700; font-size: .88rem;
+    }
+
+    /* PROGRESS STEPS */
+    .progress-section {
+      max-width: 1240px; margin: 0 auto; padding: 30px 20px;
+    }
+
+    .progress-header {
+      text-align: center; margin-bottom: 30px;
+    }
+
+    .progress-header h1 {
+      margin: 0 0 8px; color: var(--green-900); font-size: 2rem;
+    }
+
+    .progress-header p {
+      margin: 0; color: var(--ink-600); font-size: 1.05rem;
+    }
+
+    .progress-steps {
+      display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; margin-bottom: 40px;
+    }
+
+    .step-item {
+      display: flex; align-items: center; gap: 12px; padding: 12px 18px;
+      border-radius: 12px; background: #fff; border: 2px solid var(--border);
+      transition: all .3s ease;
+    }
+
+    .step-item.active {
+      background: linear-gradient(140deg, var(--green-900), var(--green-700));
+      color: #fff; border-color: var(--green-700);
+    }
+
+    .step-item.completed { background: var(--green-100); border-color: var(--green-700); }
+
+    .step-number {
+      display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%;
+      background: var(--green-100); color: var(--green-900);
+      font-weight: 700; font-size: .9rem;
+    }
+
+    .step-item.active .step-number {
+      background: rgba(255, 255, 255, 0.25); color: #fff;
+    }
+
+    .step-item.completed .step-number {
+      background: var(--green-700); color: #fff;
+    }
+
+    .step-text { font-weight: 600; font-size: .95rem; }
+
+    .wrap { max-width: 700px; margin: 0 auto 40px; padding: 0 20px; }
+
+    .card {
+      background: var(--surface);
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: var(--shadow-lg);
+      border: 1px solid var(--border);
+    }
+
+    .card h2 {
+      margin: 0 0 8px; color: var(--green-900); font-size: 1.8rem;
+    }
+
+    .card p {
+      margin: 0 0 28px; color: var(--ink-600); line-height: 1.6; font-size: 1rem;
+    }
+
+    .field { margin-bottom: 14px; }
+
+    label {
+      display: block; margin-bottom: 7px; font-weight: 700;
+      color: var(--green-900); font-size: .92rem;
+    }
+
+    input {
+      width: 100%; min-height: 46px; padding: 11px 12px;
+      border: 1px solid rgba(23, 70, 46, 0.2); border-radius: 12px;
+      font: inherit; font-size: 1rem; color: var(--ink-900); background: var(--surface);
+      outline: none; transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    input:focus {
+      border-color: var(--green-700); box-shadow: 0 0 0 4px rgba(43,114,74,.16);
+    }
+
+    .actions {
+      display: flex; gap: 12px; flex-wrap: wrap; margin-top: 28px; align-items: center;
+    }
+
+    button {
+      background: linear-gradient(140deg, var(--green-900), var(--green-700));
+      color: #fff; border: 0; border-radius: 12px; min-height: 46px; padding: 0 18px;
+      font: inherit; font-weight: 700; cursor: pointer;
+      box-shadow: 0 10px 20px rgba(16,58,37,.25);
+      transition: transform .2s ease; font-size: .95rem;
+      flex: 1; min-width: 140px;
+    }
+
+    button:hover { transform: translateY(-2px); }
+    button:disabled { opacity: 0.65; }
+
+    .link {
+      color: var(--green-900); text-decoration: none; font-weight: 700;
+      border: 1px solid rgba(23, 70, 46, 0.16); border-radius: 10px;
+      padding: 10px 12px; background: var(--surface-soft);
+      text-align: center; flex: 1; min-width: 120px;
+      transition: all .2s ease;
+    }
+
+    .link:hover { background: var(--green-100); border-color: var(--green-700); }
+
+    .msg {
+      display: none; margin-top: 18px; padding: 14px 16px;
+      border-radius: 12px; border-left: 4px solid;
+    }
+
+    .ok { background: #e8f5ec; color: #1b5939; border-left-color: #1b5939; }
+    .err { background: #fdeceb; color: #8b2f2a; border-left-color: #8b2f2a; }
+
+    footer {
+      background: linear-gradient(140deg, var(--green-950), var(--green-800));
+      color: rgba(255,255,255,.95); text-align: center;
+      padding: 24px 20px; font-size: .92rem; margin-top: 40px;
+    }
+
+    @media (max-width: 980px) {
+      .progress-steps { gap: 12px; }
+    }
+
+    @media (max-width: 640px) {
+      .nav { padding: 12px; }
+      .progress-section { padding: 20px 12px; }
+      .card { padding: 24px; }
+      .card h2 { font-size: 1.5rem; }
+      .actions button,
+      .actions .link { width: 100%; }
+      .progress-header h1 { font-size: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+  <!-- CONSISTENT HEADER -->
+  <header class="site-header">
+    <nav class="nav">
+      <div class="brand">
+        <div class="brand-mark">LC</div>
+        <div class="brand-text">Loyola Degree College YSRR</div>
+      </div>
+      <div class="nav-links">
+        <a class="nav-link" href="index.html">Home</a>
+        <a class="nav-link" href="#about">About</a>
+        <a class="nav-link" href="admin-login.html">Admin Login</a>
+        <a class="admin-pill" href="admin-login.html">Admin Panel</a>
+      </div>
+    </nav>
+  </header>
+
+  <!-- PROGRESS INDICATOR -->
+  <section class="progress-section">
+    <div class="progress-header">
+      <h1>🎓 Admissions Portal</h1>
+      <p>Complete these steps to apply for admission</p>
+    </div>
+
+    <div class="progress-steps">
+      <div class="step-item completed">
+        <div class="step-number">✓</div>
+        <div class="step-text">Create Account</div>
+      </div>
+      <div class="step-item active">
+        <div class="step-number">2</div>
+        <div class="step-text">Login</div>
+      </div>
+      <div class="step-item">
+        <div class="step-number">3</div>
+        <div class="step-text">Submit Application</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LOGIN FORM -->
+  <div class="wrap">
+    <div class="card">
+      <h2>Step 2: Login to Your Account</h2>
+      <p>Enter your email or phone number and password to access your application.</p>
+      <form id="loginForm">
+        <div class="field">
+          <label for="identifier">Email or Phone</label>
+          <input id="identifier" required>
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input id="password" type="password" required>
+        </div>
+        <div class="actions">
+          <button id="submitBtn" type="submit">Sign In</button>
+          <a class="link" href="index.html">← Back to Register</a>
+          <a class="link" href="admin-login.html">Admin Login</a>
+        </div>
+      </form>
+      <div id="ok" class="msg ok"></div>
+      <div id="err" class="msg err"></div>
+    </div>
+  </div>
+
+  <footer>
+    © 2026 Loyola Degree College YSRR. All rights reserved. | Excellence in Education
+  </footer>
+
+  <script src="config.js"></script>
+  <script>
+    const SESSION_KEY = 'loyola_portal_session';
+    let resolvedApiBaseUrl = null;
+    const normalizeBaseUrl = (url) => String(url || '').trim().replace(/\/+$/, '');
+    function getApiCandidates() {
+      const out = [];
+      if (Array.isArray(window.API_BASE_URLS)) window.API_BASE_URLS.forEach((u) => { const n = normalizeBaseUrl(u); if (n) out.push(n); });
+      const single = normalizeBaseUrl(window.API_BASE_URL); if (single) out.push(single);
+      if (window.location.protocol.startsWith('http')) out.push(normalizeBaseUrl(window.location.origin));
+      if (window.location.protocol === 'file:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        out.push('http://127.0.0.1:8002'); out.push('http://127.0.0.1:8001');
+      }
+      return [...new Set(out)].filter(Boolean);
+    }
+    async function canReachApi(base) { try { const r = await fetch(`${base}/health`); return r.ok; } catch { return false; } }
+    async function resolveApiBaseUrl() { if (resolvedApiBaseUrl) return resolvedApiBaseUrl; for (const c of getApiCandidates()) { if (await canReachApi(c)) { resolvedApiBaseUrl = c; return c; } } return getApiCandidates()[0] || ''; }
+    async function apiFetch(path, options = {}) {
+      const base = await resolveApiBaseUrl(); if (!base) throw new Error('Backend URL not configured');
+      const headers = new Headers(options.headers || {});
+      if (!headers.has('Content-Type') && options.body) headers.set('Content-Type', 'application/json');
+      const res = await fetch(`${base}${path}`, { ...options, headers });
+      const ct = res.headers.get('content-type') || ''; const data = ct.includes('application/json') ? await res.json() : await res.text();
+      if (!res.ok) throw new Error((data && data.detail) || data || `HTTP ${res.status}`);
+      return data;
+    }
+    function show(id, msg) { const ok=document.getElementById('ok'); const err=document.getElementById('err'); ok.style.display='none'; err.style.display='none'; if (!id) return; const n=document.getElementById(id); n.textContent=msg; n.style.display='block'; }
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault(); const btn=document.getElementById('submitBtn'); const old=btn.textContent; btn.disabled=true; btn.textContent='Signing in...'; show(null, '');
+      try {
+        const payload = { identifier: document.getElementById('identifier').value.trim(), password: document.getElementById('password').value };
+        const data = await apiFetch('/auth/login', { method: 'POST', body: JSON.stringify(payload) });
+        localStorage.setItem(SESSION_KEY, JSON.stringify({ token: data.token, role: 'student', account: data.account }));
+        show('ok', 'Login successful. Redirecting to application page...');
+        setTimeout(() => { window.location.href='student-application.html'; }, 350);
+      } catch (err) { show('err', err.message || 'Login failed'); }
+      finally { btn.disabled=false; btn.textContent=old; }
+    });
+  </script>
+</body>
+</html>

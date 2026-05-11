@@ -1,285 +1,275 @@
 ﻿from datetime import datetime, timedelta
 from typing import Optional
+from fastapi import FastAPI, HTTPException, Header, Request, Depends
+from fastapi.responses import FileResponse, JSONResponse
+from pydantic import BaseModel
 import base64
 import hashlib
 import hmac
 import os
 import secrets
+import socket
+from urllib.parse import quote, urlparse
 
-import mysql.connector
-from mysql.connector import Error as MySQLError
 import psycopg2
 import psycopg2.extras
 from psycopg2 import OperationalError as PGOperationalError
-from fastapi import Depends, FastAPI, Header, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
-from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
 
 app = FastAPI()
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
+# Base paths and config
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-app.mount("/static", StaticFiles(directory=BASE_DIR), name="static")
 
-DEFAULT_ADMIN_USERNAME = "Loyola admin"
-DEFAULT_ADMIN_PASSWORD = "Loyola@2004"
-SESSION_DAYS = 30
 
-# MySQL configuration
-# DB config: prefer DATABASE_URL (Supabase). Fallback to MYSQL_* for local dev.
-DATABASE_URL = os.getenv("DATABASE_URL") or os.getenv("SUPABASE_DATABASE_URL")
-MYSQL_HOST = os.getenv("MYSQL_HOST", "localhost")
-MYSQL_USER = os.getenv("MYSQL_USER", "root")
-MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD", "Baba@1531")
-MYSQL_DB = os.getenv("MYSQL_DB", "college")
+@app.on_event("startup")
+def startup_event():
+    # Ensure schema and default admin account are present on each server start.
+    init_mysql()
 
-# runtime flags (kept as mysql_* names for frontend compatibility)
-DB_TYPE = "postgres" if DATABASE_URL else "mysql"
+
+def load_env_file(env_path: str) -> None:
+    if not os.path.exists(env_path):
+        return
+    try:
+        with open(env_path, "r", encoding="utf-8") as env_file:
+            for raw_line in env_file:
+                line = raw_line.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                key, value = line.split("=", 1)
+                key = key.strip()
+                value = value.strip().strip('"').strip("'")
+                if key:
+                    os.environ[key] = value
+    except Exception:
+        return
+
+
+load_env_file(os.path.join(BASE_DIR, ".env"))
+
+# Database initialization is handled in the FastAPI startup event.
+# Compatibility names and defaults
+SESSION_DAYS = int(os.environ.get("SESSION_DAYS", "7"))
+DEFAULT_ADMIN_USERNAME = os.environ.get("DEFAULT_ADMIN_USERNAME", "Loyola admin")
+DEFAULT_ADMIN_PASSWORD = os.environ.get("DEFAULT_ADMIN_PASSWORD", "Loyola@2004")
+
+# State flags
 mysql_available = False
 mysql_connection_error = None
 
 
+# Simple error alias for older code
+Error = Exception
+
+
+def hash_token(token: str) -> str:
+    return hashlib.sha256(token.encode()).hexdigest()
+
+
 def hash_password(password: str) -> str:
-    salt = secrets.token_hex(16)
-    iterations = 120000
-    digest = hashlib.pbkdf2_hmac(
-        "sha256",
-        password.encode("utf-8"),
-        salt.encode("utf-8"),
-        iterations,
-    )
-    encoded = base64.b64encode(digest).decode("ascii")
-    return f"pbkdf2_sha256${iterations}${salt}${encoded}"
+    salt = secrets.token_hex(8)
+    dk = hashlib.pbkdf2_hmac("sha256", password.encode(), salt.encode(), 100000)
+    return f"{salt}${dk.hex()}"
 
 
-
-def verify_password(password: str, stored_hash: str) -> bool:
+def verify_password(password: str, stored: str) -> bool:
     try:
-        algorithm, iterations_text, salt, encoded_digest = stored_hash.split("$", 3)
-        if algorithm != "pbkdf2_sha256":
-            return False
-
-        digest = hashlib.pbkdf2_hmac(
-            "sha256",
-            password.encode("utf-8"),
-            salt.encode("utf-8"),
-            int(iterations_text),
-        )
-        candidate = base64.b64encode(digest).decode("ascii")
-        return hmac.compare_digest(candidate, encoded_digest)
+        salt, hexhash = stored.split("$", 1)
+        dk = hashlib.pbkdf2_hmac("sha256", password.encode(), salt.encode(), 100000)
+        return dk.hex() == hexhash
     except Exception:
         return False
 
 
+def normalize_postgres_dsn(dsn: str) -> str:
+    if not dsn or "://" not in dsn or "@" not in dsn:
+        return dsn
 
-def hash_token(token: str) -> str:
-    return hashlib.sha256(token.encode("utf-8")).hexdigest()
+    scheme, remainder = dsn.split("://", 1)
+    if "@" not in remainder:
+        return dsn
 
+    userinfo, hostpart = remainder.rsplit("@", 1)
+    if ":" not in userinfo:
+        return dsn
+
+    username, password = userinfo.split(":", 1)
+    encoded_password = quote(password, safe="")
+    return f"{scheme}://{username}:{encoded_password}@{hostpart}"
+
+
+def resolve_ipv4_host(hostname: str) -> Optional[str]:
+    try:
+        candidates = socket.getaddrinfo(hostname, None, socket.AF_INET, socket.SOCK_STREAM)
+        for candidate in candidates:
+            address = candidate[4][0]
+            if address:
+                return address
+    except Exception:
+        return None
+    return None
+
+
+def build_postgres_connection_settings() -> dict:
+    load_env_file(os.path.join(BASE_DIR, ".env"))
+
+    host = os.environ.get("SUPABASE_DB_HOST")
+    port = os.environ.get("SUPABASE_DB_PORT")
+    dbname = os.environ.get("SUPABASE_DB_NAME")
+    user = os.environ.get("SUPABASE_DB_USER")
+    password = os.environ.get("SUPABASE_DB_PASSWORD")
+    sslmode = os.environ.get("SUPABASE_DB_SSLMODE", os.environ.get("PGSSLMODE", "require"))
+
+    if host and user and password and dbname:
+        settings = {
+            "host": host,
+            "port": int(port) if port else 5432,
+            "dbname": dbname,
+            "user": user,
+            "password": password,
+            "sslmode": sslmode,
+            "connect_timeout": 10,
+            "cursor_factory": psycopg2.extras.RealDictCursor,
+        }
+        ipv4_host = resolve_ipv4_host(host)
+        if ipv4_host:
+            settings["hostaddr"] = ipv4_host
+        return settings
+
+    dsn = os.environ.get("DATABASE_URL")
+    if not dsn:
+        raise PGOperationalError("DATABASE_URL not set")
+
+    normalized_dsn = normalize_postgres_dsn(dsn)
+    parsed = urlparse(normalized_dsn)
+    settings = {
+        "dbname": parsed.path.lstrip("/") or None,
+        "user": parsed.username,
+        "password": parsed.password,
+        "port": parsed.port or 5432,
+        "connect_timeout": 10,
+        "sslmode": sslmode,
+        "cursor_factory": psycopg2.extras.RealDictCursor,
+    }
+    ipv4_host = resolve_ipv4_host(parsed.hostname or "")
+    if ipv4_host:
+        settings["host"] = parsed.hostname
+        settings["hostaddr"] = ipv4_host
+    else:
+        settings["host"] = parsed.hostname
+    return settings
 
 
 def get_server_connection():
-    """Return a server-level connection. For Postgres we return a normal connection (DB already exists on Supabase)."""
-    if DB_TYPE == "postgres":
-        return psycopg2.connect(DATABASE_URL, cursor_factory=psycopg2.extras.RealDictCursor, connect_timeout=10)
-    return mysql.connector.connect(
-        host=MYSQL_HOST,
-        user=MYSQL_USER,
-        password=MYSQL_PASSWORD,
-        connection_timeout=10,
-        autocommit=True,
-    )
-
+    return psycopg2.connect(**build_postgres_connection_settings())
 
 
 def get_mysql_connection():
-    """Return a DB connection for the configured DB_TYPE. Name kept for compatibility."""
     try:
-        if DB_TYPE == "postgres":
-            conn = psycopg2.connect(DATABASE_URL, cursor_factory=psycopg2.extras.RealDictCursor, connect_timeout=5)
-            return conn
-        else:
-            return mysql.connector.connect(
-                host=MYSQL_HOST,
-                user=MYSQL_USER,
-                password=MYSQL_PASSWORD,
-                database=MYSQL_DB,
-                connection_timeout=5,
-            )
-    except Exception as e:
-        print(f"DB connection error: {e}")
+        return get_server_connection()
+    except Exception:
         return None
 
 
-
 def init_mysql():
-    """Initialize database (MySQL or Postgres) and create tables if needed."""
+    """Initialize Postgres schema and ensure admin exists."""
     global mysql_available, mysql_connection_error
+    has_database_url = bool(os.environ.get("DATABASE_URL"))
+    has_supabase_parts = bool(
+        os.environ.get("SUPABASE_DB_HOST")
+        and os.environ.get("SUPABASE_DB_USER")
+        and os.environ.get("SUPABASE_DB_PASSWORD")
+        and os.environ.get("SUPABASE_DB_NAME")
+    )
+
+    if not has_database_url and not has_supabase_parts:
+        mysql_available = False
+        mysql_connection_error = "Postgres credentials are not configured"
+        print("⚠️ Postgres credentials are missing; skipping DB init.")
+        return False
+
     try:
-        if DB_TYPE == "postgres":
-            print(f"🔄 Attempting Postgres connection via DATABASE_URL...")
-            conn = psycopg2.connect(DATABASE_URL, cursor_factory=psycopg2.extras.RealDictCursor, connect_timeout=10)
-            cursor = conn.cursor()
+        print("🔄 Attempting Postgres connection...")
+        conn = get_server_connection()
+        cursor = conn.cursor()
 
-            # Create tables if they do not exist (Postgres)
-            cursor.execute(
-                """
-                CREATE TABLE IF NOT EXISTS accounts (
-                    id SERIAL PRIMARY KEY,
-                    full_name VARCHAR(255) NOT NULL,
-                    username VARCHAR(255) UNIQUE,
-                    email VARCHAR(255) UNIQUE,
-                    phone VARCHAR(20) UNIQUE,
-                    password_hash VARCHAR(255) NOT NULL,
-                    role VARCHAR(20) NOT NULL DEFAULT 'student',
-                    created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
-                )
-                """
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS accounts (
+                id SERIAL PRIMARY KEY,
+                full_name VARCHAR(255) NOT NULL,
+                username VARCHAR(255) UNIQUE,
+                email VARCHAR(255) UNIQUE,
+                phone VARCHAR(20) UNIQUE,
+                password_hash VARCHAR(255) NOT NULL,
+                role VARCHAR(20) NOT NULL DEFAULT 'student',
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
             )
+            """
+        )
 
-            cursor.execute(
-                """
-                CREATE TABLE IF NOT EXISTS sessions (
-                    token_hash VARCHAR(64) PRIMARY KEY,
-                    account_id INTEGER NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
-                    role VARCHAR(20) NOT NULL,
-                    expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
-                    created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
-                )
-                """
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS sessions (
+                token_hash VARCHAR(64) PRIMARY KEY,
+                account_id INTEGER NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+                role VARCHAR(20) NOT NULL,
+                expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
             )
+            """
+        )
 
-            cursor.execute(
-                """
-                CREATE TABLE IF NOT EXISTS admissions (
-                    id SERIAL PRIMARY KEY,
-                    account_id INTEGER NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
-                    name VARCHAR(255) NOT NULL,
-                    email VARCHAR(255) NOT NULL,
-                    phone VARCHAR(20) NOT NULL,
-                    course VARCHAR(255) NOT NULL,
-                    submitted_at TIMESTAMP WITH TIME ZONE,
-                    created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
-                )
-                """
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS admissions (
+                id SERIAL PRIMARY KEY,
+                account_id INTEGER NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+                name VARCHAR(255) NOT NULL,
+                email VARCHAR(255) NOT NULL,
+                phone VARCHAR(20) NOT NULL,
+                course VARCHAR(255) NOT NULL,
+                submitted_at TIMESTAMP WITH TIME ZONE,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
             )
+            """
+        )
 
-            # Indexes
-            cursor.execute("CREATE INDEX IF NOT EXISTS idx_sessions_account ON sessions(account_id)")
-            cursor.execute("CREATE INDEX IF NOT EXISTS idx_sessions_role ON sessions(role)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_sessions_account ON sessions(account_id)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_sessions_role ON sessions(role)")
 
-            # Ensure an admin account exists
-            cursor.execute("SELECT id FROM accounts WHERE role = 'admin' AND username = %s LIMIT 1", (DEFAULT_ADMIN_USERNAME,))
-            if not cursor.fetchone():
-                cursor.execute(
-                    "INSERT INTO accounts (full_name, username, email, phone, password_hash, role) VALUES (%s, %s, %s, %s, %s, 'admin')",
-                    (DEFAULT_ADMIN_USERNAME, DEFAULT_ADMIN_USERNAME, None, None, hash_password(DEFAULT_ADMIN_PASSWORD)),
-                )
-
-            conn.commit()
-            cursor.close()
-            conn.close()
-            mysql_available = True
-            mysql_connection_error = None
-            print("✅ Postgres connected and schema verified/created.")
-            return True
-
+        cursor.execute("SELECT id FROM accounts WHERE role = 'admin' LIMIT 1")
+        admin_row = cursor.fetchone()
+        if not admin_row:
+            cursor.execute(
+                "INSERT INTO accounts (full_name, username, email, phone, password_hash, role) VALUES (%s, %s, %s, %s, %s, 'admin')",
+                (DEFAULT_ADMIN_USERNAME, DEFAULT_ADMIN_USERNAME, None, None, hash_password(DEFAULT_ADMIN_PASSWORD)),
+            )
         else:
-            # existing MySQL behavior
-            print(f"🔄 Attempting MySQL connection to {MYSQL_HOST}:{MYSQL_DB}...")
-            conn = get_server_connection()
-            cursor = conn.cursor()
-
-            cursor.execute(
-                f"CREATE DATABASE IF NOT EXISTS `{MYSQL_DB}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
-            )
-            cursor.execute(f"USE `{MYSQL_DB}`")
-
+            admin_id = admin_row["id"] if isinstance(admin_row, dict) else admin_row[0]
             cursor.execute(
                 """
-                CREATE TABLE IF NOT EXISTS accounts (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
-                    full_name VARCHAR(255) NOT NULL,
-                    username VARCHAR(255) UNIQUE,
-                    email VARCHAR(255) UNIQUE,
-                    phone VARCHAR(20) UNIQUE,
-                    password_hash VARCHAR(255) NOT NULL,
-                    role VARCHAR(20) NOT NULL DEFAULT 'student',
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
-                """
+                UPDATE accounts
+                SET full_name = %s,
+                    username = %s,
+                    password_hash = %s
+                WHERE id = %s
+                """,
+                (DEFAULT_ADMIN_USERNAME, DEFAULT_ADMIN_USERNAME, hash_password(DEFAULT_ADMIN_PASSWORD), admin_id),
             )
 
-            cursor.execute(
-                """
-                CREATE TABLE IF NOT EXISTS sessions (
-                    token_hash VARCHAR(64) PRIMARY KEY,
-                    account_id INT NOT NULL,
-                    role VARCHAR(20) NOT NULL,
-                    expires_at DATETIME NOT NULL,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    INDEX(account_id),
-                    INDEX(role)
-                )
-                """
-            )
+        conn.commit()
+        cursor.close()
+        conn.close()
 
-            cursor.execute(
-                """
-                CREATE TABLE IF NOT EXISTS admissions (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
-                    account_id INT NOT NULL,
-                    name VARCHAR(255) NOT NULL,
-                    email VARCHAR(255) NOT NULL,
-                    phone VARCHAR(20) NOT NULL,
-                    course VARCHAR(255) NOT NULL,
-                    submitted_at VARCHAR(255),
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
-                """
-            )
-
-            cursor.execute(
-                "SELECT id FROM accounts WHERE role = 'admin' AND username = %s LIMIT 1",
-                (DEFAULT_ADMIN_USERNAME,),
-            )
-            if not cursor.fetchone():
-                cursor.execute(
-                    """
-                    INSERT INTO accounts (full_name, username, email, phone, password_hash, role)
-                    VALUES (%s, %s, %s, %s, %s, 'admin')
-                    """,
-                    (
-                        DEFAULT_ADMIN_USERNAME,
-                        DEFAULT_ADMIN_USERNAME,
-                        None,
-                        None,
-                        hash_password(DEFAULT_ADMIN_PASSWORD),
-                    ),
-                )
-
-            conn.commit()
-            cursor.close()
-            conn.close()
-
-            mysql_available = True
-            mysql_connection_error = None
-            print("✅ MySQL connected successfully!")
-            return True
+        mysql_available = True
+        mysql_connection_error = None
+        print("✅ Postgres connected and schema verified/created.")
+        return True
     except Exception as e:
         mysql_available = False
         mysql_connection_error = str(e)
-        print(f"❌ DB initialization failed: {e}")
-        if DB_TYPE == "mysql":
-            print(f"   Host: {MYSQL_HOST}, User: {MYSQL_USER}, DB: {MYSQL_DB}")
+        print(f"⚠️ DB initialization failed, continuing without live DB: {e}")
         return False
 
 
@@ -291,7 +281,7 @@ def create_session(account_id: int, role: str) -> str:
 
     conn = get_mysql_connection()
     if not conn:
-        raise HTTPException(status_code=503, detail="Could not connect to MySQL")
+        raise HTTPException(status_code=503, detail="Could not connect to database")
 
     try:
         cursor = conn.cursor()
@@ -303,16 +293,13 @@ def create_session(account_id: int, role: str) -> str:
         cursor.close()
         conn.close()
         return token
-    except Error as e:
+    except Exception as e:
         conn.close()
         raise HTTPException(status_code=500, detail=f"Failed to create session: {e}")
 
 
 
 def get_account_from_token(authorization: Optional[str]) -> dict:
-    if not mysql_available:
-        raise HTTPException(status_code=503, detail=f"MySQL is not available: {mysql_connection_error}")
-
     if not authorization:
         raise HTTPException(status_code=401, detail="Missing authorization token")
 
@@ -325,12 +312,12 @@ def get_account_from_token(authorization: Optional[str]) -> dict:
 
     conn = get_mysql_connection()
     if not conn:
-        raise HTTPException(status_code=503, detail="Could not connect to MySQL")
+        raise HTTPException(status_code=503, detail="Could not connect to database")
 
     token_hash = hash_token(token)
 
     try:
-    cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         cursor.execute(
             """
             SELECT s.token_hash, s.account_id, s.role, s.expires_at,
@@ -350,7 +337,9 @@ def get_account_from_token(authorization: Optional[str]) -> dict:
             raise HTTPException(status_code=401, detail="Invalid or expired session")
 
         expires_at = session["expires_at"]
-        if expires_at and expires_at < datetime.now():
+        # Handle both timezone-aware and naive timestamps from Postgres.
+        now = datetime.now(expires_at.tzinfo) if expires_at and getattr(expires_at, "tzinfo", None) else datetime.now()
+        if expires_at and expires_at < now:
             cursor.execute("DELETE FROM sessions WHERE token_hash = %s", (token_hash,))
             conn.commit()
             cursor.close()
@@ -502,13 +491,10 @@ def student_application_page_html():
     return FileResponse(os.path.join(BASE_DIR, "student-application.html"))
 
 
-# Initialize DB on FastAPI startup (avoid import-time DB connections)
-@app.on_event("startup")
-def on_startup_initialize_db():
-    init_mysql()
-
-
 class ApplicationRequest(BaseModel):
+    name: str
+    email: str
+    phone: str
     course: str
 
 
@@ -534,56 +520,58 @@ def health_check():
     """Health check endpoint"""
     return {
         "status": "healthy",
-        "mysql": "connected" if mysql_available else "disconnected",
-        "mysql_error": mysql_connection_error,
-        "storage": "mysql",
+        "storage": "postgres",
+        "database": "configured" if os.environ.get("DATABASE_URL") or os.environ.get("SUPABASE_DB_HOST") else "not configured",
+        "database_error": None,
         "timestamp": datetime.now().isoformat(),
     }
 
 
+@app.get("/health/live")
+def health_live():
+    """Live database connectivity check."""
+    conn = get_mysql_connection()
+    if not conn:
+        return {
+            "status": "degraded",
+            "storage": "postgres",
+            "database": "offline",
+            "timestamp": datetime.now().isoformat(),
+        }
+
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT 1")
+        cursor.fetchone()
+        cursor.close()
+        conn.close()
+        return {
+            "status": "healthy",
+            "storage": "postgres",
+            "database": "online",
+            "timestamp": datetime.now().isoformat(),
+        }
+    except Exception:
+        try:
+            conn.close()
+        except Exception:
+            pass
+        return {
+            "status": "degraded",
+            "storage": "postgres",
+            "database": "offline",
+            "timestamp": datetime.now().isoformat(),
+        }
+
+
 @app.get("/debug/mysql-status")
 def mysql_status():
-    """Debug endpoint to check MySQL status"""
-    if mysql_available:
-        try:
-            conn = get_mysql_connection()
-            if conn:
-                cursor = conn.cursor()
-                cursor.execute("SELECT COUNT(*) as count FROM admissions")
-                r = cursor.fetchone()
-                applications_count = r['count'] if isinstance(r, dict) else r[0]
-                cursor.execute("SELECT COUNT(*) as count FROM accounts WHERE role = 'student'")
-                r = cursor.fetchone()
-                students_count = r['count'] if isinstance(r, dict) else r[0]
-                cursor.execute("SELECT COUNT(*) as count FROM accounts WHERE role = 'admin'")
-                r = cursor.fetchone()
-                admins_count = r['count'] if isinstance(r, dict) else r[0]
-                cursor.close()
-                conn.close()
-                return {
-                    "status": "✅ Connected",
-                    "host": MYSQL_HOST,
-                    "database": MYSQL_DB,
-                    "user": MYSQL_USER,
-                    "total_applications": applications_count,
-                    "total_students": students_count,
-                    "total_admins": admins_count,
-                    "timestamp": datetime.now().isoformat(),
-                }
-        except Error as e:
-            return {
-                "status": "❌ Connection failed",
-                "error": str(e),
-                "host": MYSQL_HOST,
-                "database": MYSQL_DB,
-            }
-    else:
-        return {
-            "status": "❌ Not connected",
-            "error": mysql_connection_error,
-            "host": MYSQL_HOST,
-            "database": MYSQL_DB,
-        }
+    """Debug endpoint to check database configuration."""
+    return {
+        "status": "configured" if os.environ.get("DATABASE_URL") or os.environ.get("SUPABASE_DB_HOST") else "not configured",
+        "storage": "postgres",
+        "timestamp": datetime.now().isoformat(),
+    }
 
 
 @app.get("/auth/me")
@@ -597,9 +585,6 @@ def auth_me(authorization: Optional[str] = Header(default=None)):
 
 @app.post("/auth/register")
 def auth_register(payload: StudentRegister):
-    if not mysql_available:
-        raise HTTPException(status_code=503, detail=f"MySQL is not available: {mysql_connection_error}")
-
     full_name = payload.full_name.strip()
     email = payload.email.strip().lower()
     phone = payload.phone.strip()
@@ -613,10 +598,10 @@ def auth_register(payload: StudentRegister):
 
     conn = get_mysql_connection()
     if not conn:
-        raise HTTPException(status_code=503, detail="Could not connect to MySQL")
+        raise HTTPException(status_code=503, detail="Could not connect to database")
 
     try:
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor()
         cursor.execute(
             "SELECT id FROM accounts WHERE LOWER(email) = %s OR phone = %s LIMIT 1",
             (email, phone),
@@ -627,25 +612,15 @@ def auth_register(payload: StudentRegister):
             conn.close()
             raise HTTPException(status_code=409, detail="An account with this email or phone already exists")
 
-        if DB_TYPE == 'postgres':
-            cursor.execute(
-                """
-                INSERT INTO accounts (full_name, email, phone, password_hash, role)
-                VALUES (%s, %s, %s, %s, 'student') RETURNING id
-                """,
-                (full_name, email, phone, hash_password(password)),
-            )
-            row = cursor.fetchone()
-            account_id = row['id'] if isinstance(row, dict) else row[0]
-        else:
-            cursor.execute(
-                """
-                INSERT INTO accounts (full_name, email, phone, password_hash, role)
-                VALUES (%s, %s, %s, %s, 'student')
-                """,
-                (full_name, email, phone, hash_password(password)),
-            )
-            account_id = cursor.lastrowid
+        cursor.execute(
+            """
+            INSERT INTO accounts (full_name, email, phone, password_hash, role)
+            VALUES (%s, %s, %s, %s, 'student') RETURNING id
+            """,
+            (full_name, email, phone, hash_password(password)),
+        )
+        row = cursor.fetchone()
+        account_id = row['id'] if isinstance(row, dict) else row[0]
         conn.commit()
         cursor.close()
         conn.close()
@@ -673,9 +648,6 @@ def auth_register(payload: StudentRegister):
 
 @app.post("/auth/login")
 def auth_login(payload: StudentLogin):
-    if not mysql_available:
-        raise HTTPException(status_code=503, detail=f"MySQL is not available: {mysql_connection_error}")
-
     identifier = payload.identifier.strip()
     password = payload.password.strip()
 
@@ -684,10 +656,10 @@ def auth_login(payload: StudentLogin):
 
     conn = get_mysql_connection()
     if not conn:
-        raise HTTPException(status_code=503, detail="Could not connect to MySQL")
+        raise HTTPException(status_code=503, detail="Could not connect to database")
 
     try:
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor()
         cursor.execute(
             """
             SELECT id, full_name, email, phone, password_hash, role, created_at
@@ -730,9 +702,6 @@ def auth_login(payload: StudentLogin):
 
 @app.post("/admin/login")
 def admin_login(payload: AdminLogin):
-    if not mysql_available:
-        raise HTTPException(status_code=503, detail=f"MySQL is not available: {mysql_connection_error}")
-
     username = payload.username.strip()
     password = payload.password.strip()
 
@@ -741,10 +710,10 @@ def admin_login(payload: AdminLogin):
 
     conn = get_mysql_connection()
     if not conn:
-        raise HTTPException(status_code=503, detail="Could not connect to MySQL")
+        raise HTTPException(status_code=503, detail="Could not connect to database")
 
     try:
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor()
         cursor.execute(
             """
             SELECT id, full_name, username, email, phone, password_hash, role, created_at
@@ -788,7 +757,7 @@ def admin_login(payload: AdminLogin):
 
 @app.post("/auth/logout")
 def auth_logout(authorization: Optional[str] = Header(default=None)):
-    if not authorization or not mysql_available:
+    if not authorization:
         return {"success": True, "message": "Logged out"}
 
     token = authorization.strip()
@@ -816,13 +785,21 @@ def auth_logout(authorization: Optional[str] = Header(default=None)):
 
 @app.post("/apply")
 def apply(application: ApplicationRequest, current_account: dict = Depends(require_student_account)):
-    """Save student application data to MySQL."""
+    """Save student application data to Supabase/Postgres."""
     try:
+        name = application.name.strip()
+        email = application.email.strip().lower()
+        phone = application.phone.strip()
+        course = application.course.strip()
+
+        if not name or not email or not phone or not course:
+            raise HTTPException(status_code=400, detail="Name, email, phone and course are required")
+
         submitted_at = datetime.now().isoformat()
 
         conn = get_mysql_connection()
         if not conn:
-            raise HTTPException(status_code=503, detail="Could not connect to MySQL")
+            raise HTTPException(status_code=503, detail="Could not connect to database")
 
         try:
             cursor = conn.cursor()
@@ -833,10 +810,10 @@ def apply(application: ApplicationRequest, current_account: dict = Depends(requi
                 """,
                 (
                     current_account["id"],
-                    current_account["full_name"],
-                    current_account["email"],
-                    current_account["phone"],
-                    application.course.strip(),
+                    name,
+                    email,
+                    phone,
+                    course,
                     submitted_at,
                 ),
             )
@@ -844,17 +821,17 @@ def apply(application: ApplicationRequest, current_account: dict = Depends(requi
             cursor.close()
             conn.close()
 
-            print(f"✅ Application saved to MySQL: {current_account['full_name']} ({current_account['email']})")
+            print(f"✅ Application saved to database: {name} ({email})")
             return {
                 "success": True,
                 "message": "Application saved successfully to database",
-                "storage": "mysql",
+                "storage": "postgres",
                 "submitted_at": submitted_at,
             }
         except Error as e:
             conn.close()
-            print(f"❌ MySQL save error: {e}")
-            raise HTTPException(status_code=500, detail=f"Failed to save application to MySQL: {e}")
+            print(f"❌ Postgres save error: {e}")
+            raise HTTPException(status_code=500, detail=f"Failed to save application to database: {e}")
     except HTTPException:
         raise
     except Exception as e:
@@ -868,9 +845,9 @@ def get_data(_current_account: dict = Depends(require_admin_account)):
     try:
         conn = get_mysql_connection()
         if not conn:
-            raise HTTPException(status_code=503, detail="Could not connect to MySQL")
+            raise HTTPException(status_code=503, detail="Could not connect to database")
 
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         cursor.execute(
             """
             SELECT a.id, a.account_id, a.name, a.email, a.phone, a.course, a.submitted_at, a.created_at,
@@ -883,7 +860,7 @@ def get_data(_current_account: dict = Depends(require_admin_account)):
         data = cursor.fetchall()
         cursor.close()
         conn.close()
-        print(f"📊 Retrieved {len(data)} applications from MySQL")
+        print(f"📊 Retrieved {len(data)} applications from database")
         return [serialize_application(row) for row in data]
     except Exception as e:
         print(f"❌ Error in get_data: {e}")
@@ -892,15 +869,12 @@ def get_data(_current_account: dict = Depends(require_admin_account)):
 
 @app.get("/admin/accounts")
 def get_accounts(_current_account: dict = Depends(require_admin_account)):
-    if not mysql_available:
-        raise HTTPException(status_code=503, detail=f"MySQL is not available: {mysql_connection_error}")
-
     conn = get_mysql_connection()
     if not conn:
-        raise HTTPException(status_code=503, detail="Could not connect to MySQL")
+        raise HTTPException(status_code=503, detail="Could not connect to database")
 
     try:
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         cursor.execute(
             """
             SELECT id, full_name, username, email, phone, role, created_at
@@ -928,18 +902,13 @@ def cleanup_applications(_current_account: dict = Depends(require_admin_account)
 
     conn = get_mysql_connection()
     if not conn:
-        raise HTTPException(status_code=503, detail="Could not connect to MySQL")
+        raise HTTPException(status_code=503, detail="Could not connect to database")
 
     try:
         cursor = conn.cursor()
         cursor.execute("SELECT id, course FROM admissions ORDER BY id")
         rows = cursor.fetchall()
-        def row_get_item(r, idx_or_key):
-            if isinstance(r, dict):
-                return r.get(idx_or_key)
-            return r[idx_or_key]
-
-        ids_to_delete = [row_get_item(row, 'id') if isinstance(row, dict) else row_get_item(row, 0) for row in rows if (row_get_item(row, 'course') if isinstance(row, dict) else row_get_item(row, 1)) not in allowed_courses]
+        ids_to_delete = [row[0] for row in rows if row[1] not in allowed_courses]
         before_count = len(rows)
 
         deleted_count = 0
@@ -951,7 +920,11 @@ def cleanup_applications(_current_account: dict = Depends(require_admin_account)
 
         cursor.execute("SELECT COUNT(*) as count FROM admissions")
         r = cursor.fetchone()
-        after_count = r['count'] if isinstance(r, dict) else r[0]
+        # psycopg2 RealDictCursor returns dict-like rows; normal cursor returns tuple
+        if hasattr(r, 'get'):
+            after_count = r.get('count')
+        else:
+            after_count = r[0]
 
         cursor.close()
         conn.close()

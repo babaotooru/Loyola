@@ -557,7 +557,7 @@
       <div class="panel-header">
         <div>
           <h2>Admissions and account records</h2>
-          <p>Every row below comes from shared MySQL tables. No JSON fallback is used.</p>
+          <p>Every row below comes from shared PostgreSQL tables in Supabase. No JSON fallback is used.</p>
         </div>
         <div class="status-pill" id="statusPill">Admin connected</div>
       </div>
@@ -1042,18 +1042,8 @@
     }
 
     window.addEventListener('load', async () => {
-      // Check database availability first
-      try {
-        const response = await fetch('/health');
-        const data = await response.json();
-        if (data.mysql !== 'connected') {
-          window.location.href = 'database-setup.html';
-          return;
-        }
-      } catch (error) {
-        window.location.href = 'database-setup.html';
-        return;
-      }
+      // Load admin dashboard
+      // Database is configured but may not be reachable; operations will fail gracefully
 
       bindEvents();
       const hasAccess = await verifyAdminSession();

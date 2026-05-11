@@ -200,7 +200,7 @@
           <div class="step-content">
             <strong>Set Vercel environment variables</strong>
             <p>In Vercel dashboard → Settings → Environment Variables, add:</p>
-            <div class="code-block">MYSQL_HOST=your-supabase-host<br>MYSQL_USER=postgres<br>MYSQL_PASSWORD=your-password<br>MYSQL_DB=postgres</div>
+            <div class="code-block">SUPABASE_DB_HOST=your-supabase-host<br>SUPABASE_DB_USER=postgres<br>SUPABASE_DB_PASSWORD=your-password<br>SUPABASE_DB_NAME=postgres<br>SUPABASE_DB_PORT=5432</div>
           </div>
         </div>
 
@@ -223,9 +223,9 @@
       <div class="section">
         <p><strong>Common Issues:</strong></p>
         <ul>
-          <li><strong>MySQL already running locally?</strong> The app will auto-connect once MySQL is confirmed to be running.</li>
+          <li><strong>Supabase connection timing out?</strong> Check that the database host, port, and password are correct and that your network allows outbound database connections.</li>
           <li><strong>On Vercel but still disconnected?</strong> Make sure environment variables are set correctly and redeploy.</li>
-          <li><strong>PostgreSQL instead of MySQL?</strong> Contact support to upgrade the backend driver for PostgreSQL.</li>
+          <li><strong>Need the app to stay usable offline?</strong> The backend now returns a clean status instead of a raw connection error.</li>
         </ul>
       </div>
 
@@ -240,12 +240,12 @@
         const data = await response.json();
         const statusEl = document.getElementById('dbStatus');
         
-        if (data.mysql === 'connected') {
+        if (data.database === 'configured') {
           statusEl.innerHTML = '✅ <strong>Connected!</strong> Refresh the page to get started.';
           statusEl.style.color = '#1b5939';
           setTimeout(() => { location.reload(); }, 1500);
         } else {
-          statusEl.innerHTML = '❌ <strong>Still disconnected.</strong> Check your database setup and try again.';
+          statusEl.innerHTML = '⚠️ <strong>Not configured yet.</strong> Add the Supabase variables and try again.';
           statusEl.style.color = '#8b2f2a';
         }
       } catch (error) {

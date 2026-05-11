@@ -3,186 +3,509 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Student Login - Loyola Admissions</title>
+  <title>Student Login - Loyola Degree College YSRR</title>
   <style>
     :root {
-      --green-900: #173f2a;
-      --green-800: #1d5335;
-      --green-700: #2a7048;
-      --ink-900: #11251a;
-      --ink-600: #4f6459;
+      --green-950: #0f2f20;
+      --green-900: #17462e;
+      --green-800: #1f5a3a;
+      --green-700: #2b724a;
+      --gold-500: #c9a74b;
+      --ink-900: #1b2c22;
+      --ink-600: #4f6257;
       --surface: #ffffff;
-      --surface-soft: #f4f8f5;
-      --border: rgba(23, 63, 42, 0.18);
-      --focus: rgba(42, 112, 72, 0.24);
-      --shadow: 0 18px 42px rgba(17, 37, 26, 0.14);
+      --surface-soft: #f5f8f5;
+      --border: rgba(23, 70, 46, 0.16);
+      --shadow-md: 0 14px 28px rgba(15, 47, 32, 0.12);
+      --radius-lg: 16px;
     }
 
     * { box-sizing: border-box; }
 
+    html { scroll-behavior: smooth; }
+
     body {
       margin: 0;
-      font-family: "Segoe UI", Verdana, sans-serif;
-      background:
-        radial-gradient(circle at 12% 10%, rgba(42, 112, 72, 0.14), transparent 32%),
-        linear-gradient(145deg, #edf4ef, #e7f0ea);
+      font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
       color: var(--ink-900);
+      background:
+        radial-gradient(circle at 12% 8%, rgba(43, 114, 74, 0.14), transparent 34%),
+        radial-gradient(circle at 88% 12%, rgba(201, 167, 75, 0.1), transparent 26%),
+        linear-gradient(180deg, #f1f7f3 0%, #eef4f0 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
     }
 
-    .wrap { max-width: 720px; margin: 48px auto; padding: 0 18px; }
+    a { color: inherit; text-decoration: none; }
+
+    /* ===== HEADER ===== */
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(14px);
+      background: rgba(15, 47, 32, 0.92);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .nav {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #fff;
+    }
+
+    .brand-mark {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      font-family: Georgia, serif;
+      font-weight: 700;
+      background: linear-gradient(140deg, var(--gold-500), #e4cd8f);
+      color: #2a2a1f;
+      box-shadow: 0 10px 22px rgba(0,0,0,.24);
+      flex: 0 0 auto;
+    }
+
+    .brand-text { font-weight: 700; letter-spacing: .2px; }
+
+    .nav-links {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .nav-link {
+      color: rgba(255, 255, 255, 0.88);
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: .9rem;
+      transition: background .2s ease, color .2s ease;
+      cursor: pointer;
+    }
+
+    .nav-link:hover { background: rgba(255, 255, 255, 0.12); color: #fff; }
+
+    /* ===== PROGRESS INDICATOR ===== */
+    .progress-wrapper {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 24px 20px;
+    }
+
+    .progress-indicator {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .progress-step {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: .95rem;
+      color: var(--ink-600);
+    }
+
+    .step-number {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: var(--surface);
+      border: 2px solid var(--border);
+      font-weight: 700;
+      color: var(--green-900);
+    }
+
+    .progress-step.active .step-number {
+      background: var(--green-700);
+      color: #fff;
+      border-color: var(--green-700);
+    }
+
+    .progress-step.completed .step-number {
+      background: var(--green-800);
+      color: #fff;
+      border-color: var(--green-800);
+    }
+
+    /* ===== MAIN CONTENT ===== */
+    .main-content {
+      flex: 1;
+      max-width: 600px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 0 20px 40px;
+    }
 
     .card {
       background: var(--surface);
-      border-radius: 20px;
-      padding: 28px;
-      box-shadow: var(--shadow);
+      border-radius: var(--radius-lg);
+      padding: 32px;
+      box-shadow: var(--shadow-md);
       border: 1px solid var(--border);
     }
 
-    h1 {
-      margin: 0 0 6px;
+    .card h1 {
+      margin: 0 0 8px;
       font-family: Georgia, serif;
+      font-size: 1.8rem;
       color: var(--green-900);
-      letter-spacing: 0.2px;
     }
 
-    p { margin: 0 0 18px; color: var(--ink-600); line-height: 1.6; }
+    .card p {
+      margin: 0 0 20px;
+      color: var(--ink-600);
+      line-height: 1.6;
+    }
 
-    .field { margin-bottom: 12px; }
+    form { display: grid; gap: 16px; }
+
+    .field { display: grid; }
 
     label {
       display: block;
-      margin-bottom: 7px;
+      margin-bottom: 8px;
       font-weight: 700;
       color: var(--green-900);
-      font-size: 0.92rem;
+      font-size: .95rem;
     }
 
     input {
       width: 100%;
       min-height: 46px;
-      padding: 11px 12px;
       border: 1px solid var(--border);
-      border-radius: 12px;
+      border-radius: 10px;
+      padding: 11px 14px;
       font: inherit;
       color: var(--ink-900);
       background: var(--surface);
       outline: none;
-      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      transition: border-color .2s ease, box-shadow .2s ease;
     }
 
     input:focus {
       border-color: var(--green-700);
-      box-shadow: 0 0 0 4px var(--focus);
+      box-shadow: 0 0 0 4px rgba(43, 114, 74, 0.12);
+    }
+
+    .field-hint {
+      font-size: .85rem;
+      color: var(--ink-600);
+      margin-top: 4px;
     }
 
     .actions {
       display: flex;
-      gap: 10px;
+      gap: 12px;
       flex-wrap: wrap;
-      margin-top: 6px;
+      margin-top: 16px;
       align-items: center;
     }
 
     button {
-      background: linear-gradient(145deg, var(--green-900), var(--green-700));
+      background: linear-gradient(140deg, var(--green-900), var(--green-700));
       color: #fff;
       border: 0;
-      border-radius: 12px;
+      border-radius: 10px;
       min-height: 46px;
-      padding: 0 18px;
+      padding: 0 20px;
       font: inherit;
       font-weight: 700;
       cursor: pointer;
-      box-shadow: 0 12px 26px rgba(23, 63, 42, 0.22);
+      box-shadow: 0 8px 18px rgba(23, 70, 46, 0.2);
+      transition: transform .2s ease, box-shadow .2s ease;
     }
 
-    button:disabled { opacity: 0.65; }
+    button:hover:not(:disabled) { transform: translateY(-2px); }
+
+    button:disabled { opacity: 0.7; cursor: not-allowed; }
 
     .link {
       color: var(--green-900);
       text-decoration: none;
       font-weight: 700;
-      border: 1px solid rgba(23, 63, 42, 0.14);
+      border: 1px solid var(--border);
       border-radius: 10px;
-      padding: 10px 12px;
+      padding: 10px 14px;
       background: var(--surface-soft);
+      transition: background .2s ease, border-color .2s ease;
+      display: inline-block;
     }
 
-    .msg { display: none; margin-top: 14px; padding: 10px 12px; border-radius: 10px; }
-    .ok { background: #e5f3e9; color: #16452d; border: 1px solid #bfdac7; }
-    .err { background: #fdeceb; color: #8b2f2a; border: 1px solid #efc3bf; }
+    .link:hover { background: #fff; border-color: var(--green-700); }
+
+    .message {
+      display: none;
+      margin-top: 12px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      font-size: .95rem;
+      line-height: 1.55;
+    }
+
+    .message.ok {
+      background: #e8f5ec;
+      color: #1b5939;
+      border: 1px solid #bfdcc8;
+    }
+
+    .message.err {
+      background: #fdeceb;
+      color: #8b2f2a;
+      border: 1px solid #efc3bf;
+    }
+
+    /* ===== FOOTER ===== */
+    footer {
+      margin-top: auto;
+      background: linear-gradient(140deg, var(--green-950), var(--green-800));
+      color: rgba(255, 255, 255, 0.92);
+      text-align: center;
+      padding: 20px 12px;
+      font-size: .9rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+    }
 
     @media (max-width: 760px) {
-      .wrap { margin-top: 28px; }
+      .nav { padding: 10px 15px; }
+      .progress-wrapper { padding: 16px 15px; }
+      .main-content { padding: 0 15px 30px; }
       .card { padding: 20px; }
-      .actions button,
-      .actions .link { width: 100%; text-align: center; }
+      .card h1 { font-size: 1.5rem; }
+      .actions button, .actions .link { width: 100%; text-align: center; }
+      .progress-step { font-size: .85rem; gap: 4px; }
+      .step-number { width: 28px; height: 28px; font-size: .9rem; }
     }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="card">
-      <h1>Student Login</h1>
-      <p>Sign in with your email or phone and password.</p>
-      <form id="loginForm">
-        <div class="field">
-          <label for="identifier">Email or Phone</label>
-          <input id="identifier" required>
-        </div>
-        <div class="field">
-          <label for="password">Password</label>
-          <input id="password" type="password" required>
-        </div>
-        <div class="actions">
-          <button id="submitBtn" type="submit">Sign In</button>
-          <a class="link" href="student-register.html">Create account</a>
-          <a class="link" href="admin-login.html">Admin Login</a>
-          <a class="link" href="index.html">Home</a>
-        </div>
-      </form>
-      <div id="ok" class="msg ok"></div>
-      <div id="err" class="msg err"></div>
+  <!-- HEADER -->
+  <header class="site-header">
+    <nav class="nav">
+      <div class="brand">
+        <div class="brand-mark">LC</div>
+        <div class="brand-text">Loyola Degree College YSRR</div>
+      </div>
+      <div class="nav-links">
+        <a class="nav-link" href="student-register.html">Register</a>
+        <a class="nav-link" href="student-login.html">Login</a>
+        <a class="nav-link" href="admin-login.html" style="background: linear-gradient(140deg, #c9a74b, #e4cd8f); color: #2a2a1f; padding: 8px 14px; border-radius: 8px; font-weight: 700;">Admin Panel</a>
+      </div>
+    </nav>
+  </header>
+
+  <!-- PROGRESS INDICATOR -->
+  <div class="progress-wrapper">
+    <div class="progress-indicator">
+      <div class="progress-step completed">
+        <div class="step-number">1</div>
+        <span>Create Account</span>
+      </div>
+      <div class="progress-step active">
+        <div class="step-number">2</div>
+        <span>Login</span>
+      </div>
+      <div class="progress-step">
+        <div class="step-number">3</div>
+        <span>Course Selection</span>
+      </div>
     </div>
   </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="main-content">
+    <div class="card">
+      <h1>Sign In</h1>
+      <p>Enter your credentials to access your admission application.</p>
+
+      <form id="loginForm">
+        <div class="field">
+          <label for="identifier">Email or Phone Number *</label>
+          <input id="identifier" type="text" placeholder="Enter your email or phone" required>
+          <div class="field-hint">Use the email or phone you registered with</div>
+        </div>
+
+        <div class="field">
+          <label for="password">Password *</label>
+          <input id="password" type="password" placeholder="Enter your password" required>
+          <div class="field-hint">Your account password</div>
+        </div>
+
+        <div class="actions">
+          <button id="submitBtn" type="submit">Sign In</button>
+          <a class="link" href="student-register.html">Create Account</a>
+        </div>
+      </form>
+
+      <div id="okMessage" class="message ok"></div>
+      <div id="errMessage" class="message err"></div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    © 2026 Loyola Degree College YSRR. All rights reserved. | Excellence in Education
+  </footer>
+
   <script src="config.js"></script>
   <script>
     const SESSION_KEY = 'loyola_portal_session';
     let resolvedApiBaseUrl = null;
-    const normalizeBaseUrl = (url) => String(url || '').trim().replace(/\/+$/, '');
-    function getApiCandidates() {
-      const out = [];
-      if (Array.isArray(window.API_BASE_URLS)) window.API_BASE_URLS.forEach((u) => { const n = normalizeBaseUrl(u); if (n) out.push(n); });
-      const single = normalizeBaseUrl(window.API_BASE_URL); if (single) out.push(single);
-      if (window.location.protocol.startsWith('http')) out.push(normalizeBaseUrl(window.location.origin));
-      if (window.location.protocol === 'file:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-        out.push('http://127.0.0.1:8002'); out.push('http://127.0.0.1:8001');
-      }
-      return [...new Set(out)].filter(Boolean);
+
+    function normalizeBaseUrl(url) {
+      return String(url || '').trim().replace(/\/+$/, '');
     }
-    async function canReachApi(base) { try { const r = await fetch(`${base}/health`); return r.ok; } catch { return false; } }
-    async function resolveApiBaseUrl() { if (resolvedApiBaseUrl) return resolvedApiBaseUrl; for (const c of getApiCandidates()) { if (await canReachApi(c)) { resolvedApiBaseUrl = c; return c; } } return getApiCandidates()[0] || ''; }
+
+    function getApiCandidates() {
+      const candidates = [];
+      if (Array.isArray(window.API_BASE_URLS)) {
+        window.API_BASE_URLS.forEach((url) => {
+          const normalized = normalizeBaseUrl(url);
+          if (normalized) candidates.push(normalized);
+        });
+      }
+      const single = normalizeBaseUrl(window.API_BASE_URL);
+      if (single) candidates.push(single);
+      if (window.location.protocol.startsWith('http')) {
+        candidates.push(normalizeBaseUrl(window.location.origin));
+      }
+      if (window.location.protocol === 'file:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        candidates.push('http://127.0.0.1:8002');
+        candidates.push('http://127.0.0.1:8001');
+      }
+      return [...new Set(candidates)].filter(Boolean);
+    }
+
+    function getSession() {
+      try {
+        const raw = localStorage.getItem(SESSION_KEY);
+        return raw ? JSON.parse(raw) : null;
+      } catch {
+        return null;
+      }
+    }
+
+    function setSession(token, account) {
+      localStorage.setItem(SESSION_KEY, JSON.stringify({
+        token,
+        role: 'student',
+        account,
+      }));
+    }
+
+    async function canReachApi(baseUrl) {
+      try {
+        const res = await fetch(`${baseUrl}/health`);
+        return res.ok;
+      } catch {
+        return false;
+      }
+    }
+
+    async function resolveApiBaseUrl() {
+      if (resolvedApiBaseUrl) return resolvedApiBaseUrl;
+      const candidates = getApiCandidates();
+      for (const candidate of candidates) {
+        if (await canReachApi(candidate)) {
+          resolvedApiBaseUrl = candidate;
+          return candidate;
+        }
+      }
+      return candidates[0] || '';
+    }
+
+    async function getPortalUrl(path) {
+      const baseUrl = await resolveApiBaseUrl();
+      const origin = baseUrl || (window.location.protocol.startsWith('http') ? window.location.origin : 'http://127.0.0.1:8002');
+      return `${origin}${path}`;
+    }
+
     async function apiFetch(path, options = {}) {
-      const base = await resolveApiBaseUrl(); if (!base) throw new Error('Backend URL not configured');
+      const apiBaseUrl = await resolveApiBaseUrl();
+      if (!apiBaseUrl) throw new Error('Backend URL is not configured');
       const headers = new Headers(options.headers || {});
-      if (!headers.has('Content-Type') && options.body) headers.set('Content-Type', 'application/json');
-      const res = await fetch(`${base}${path}`, { ...options, headers });
-      const ct = res.headers.get('content-type') || ''; const data = ct.includes('application/json') ? await res.json() : await res.text();
-      if (!res.ok) throw new Error((data && data.detail) || data || `HTTP ${res.status}`);
+      if (!headers.has('Content-Type') && options.body) {
+        headers.set('Content-Type', 'application/json');
+      }
+      const res = await fetch(`${apiBaseUrl}${path}`, { ...options, headers });
+      const contentType = res.headers.get('content-type') || '';
+      const data = contentType.includes('application/json') ? await res.json() : await res.text();
+      if (!res.ok) {
+        const detail = typeof data === 'object' && data !== null ? data.detail : data;
+        throw new Error(detail || `Request failed with status ${res.status}`);
+      }
       return data;
     }
-    function show(id, msg) { const ok=document.getElementById('ok'); const err=document.getElementById('err'); ok.style.display='none'; err.style.display='none'; if (!id) return; const n=document.getElementById(id); n.textContent=msg; n.style.display='block'; }
-    document.getElementById('loginForm').addEventListener('submit', async (e) => {
-      e.preventDefault(); const btn=document.getElementById('submitBtn'); const old=btn.textContent; btn.disabled=true; btn.textContent='Signing in...'; show(null, '');
+
+    function showMessage(kind, text) {
+      document.getElementById('okMessage').style.display = 'none';
+      document.getElementById('errMessage').style.display = 'none';
+      if (!kind) return;
+      const node = kind === 'ok' ? document.getElementById('okMessage') : document.getElementById('errMessage');
+      node.textContent = text;
+      node.style.display = 'block';
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      showMessage(null, '');
+
+      const submitBtn = document.getElementById('submitBtn');
+      const original = submitBtn.textContent;
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Signing in...';
+
       try {
-        const payload = { identifier: document.getElementById('identifier').value.trim(), password: document.getElementById('password').value };
-        const data = await apiFetch('/auth/login', { method: 'POST', body: JSON.stringify(payload) });
-        localStorage.setItem(SESSION_KEY, JSON.stringify({ token: data.token, role: 'student', account: data.account }));
-        show('ok', 'Login successful. Redirecting to application page...');
-        setTimeout(() => { window.location.href='student-application.html'; }, 350);
-      } catch (err) { show('err', err.message || 'Login failed'); }
-      finally { btn.disabled=false; btn.textContent=old; }
+        const identifier = document.getElementById('identifier').value.trim().toLowerCase();
+        const password = document.getElementById('password').value;
+
+        if (!identifier || !password) {
+          throw new Error('All fields are required');
+        }
+
+        const result = await apiFetch('/auth/login', {
+          method: 'POST',
+          body: JSON.stringify({
+            identifier,
+            password,
+          }),
+        });
+
+        if (result?.token) {
+          setSession(result.token, result.account || null);
+        }
+
+        showMessage('ok', 'Login successful! Redirecting to course selection...');
+        setTimeout(async () => {
+          const appUrl = await getPortalUrl('/student-application.html');
+          window.location.href = appUrl;
+        }, 800);
+      } catch (error) {
+        showMessage('err', error.message || 'Login failed');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = original;
+      }
     });
   </script>
 </body>

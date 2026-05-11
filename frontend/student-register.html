@@ -130,7 +130,7 @@
   <div class="wrap">
     <div class="card">
       <h1>Student Registration</h1>
-      <p>Create your Loyola admissions account. Your details are saved in MySQL.</p>
+      <p>Create your Loyola admissions account. Your details are saved securely in Supabase (Postgres).</p>
       <form id="registerForm">
         <div class="row">
           <div class="field">
@@ -214,7 +214,7 @@
         const data = await apiFetch('/auth/register', { method: 'POST', body: JSON.stringify(payload) });
         localStorage.setItem(SESSION_KEY, JSON.stringify({ token: data.token, role: 'student', account: data.account }));
         show('ok', 'Account created. Redirecting to application page...');
-        setTimeout(() => { window.location.href = 'student-application.html'; }, 400);
+        setTimeout(() => { window.location.href = 'student-login.html'; }, 500);
       } catch (err) {
         show('err', err.message || 'Registration failed');
       } finally {
