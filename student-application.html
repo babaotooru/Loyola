@@ -498,10 +498,13 @@
       for (const candidate of getApiCandidates()) {
         if (await canReachApi(candidate)) {
           resolvedApiBaseUrl = candidate;
+          if (typeof window.showApiDebug === 'function') window.showApiDebug(candidate, 'probe');
           return candidate;
         }
       }
-      return getApiCandidates()[0] || '';
+      const fallback = getApiCandidates()[0] || '';
+      if (typeof window.showApiDebug === 'function') window.showApiDebug(fallback, 'fallback');
+      return fallback;
     }
 
     async function getPortalUrl(path) {

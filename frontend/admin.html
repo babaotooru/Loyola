@@ -732,12 +732,15 @@
       for (const candidate of getApiCandidates()) {
         if (await canReachApi(candidate)) {
           resolvedApiBaseUrl = candidate;
+          if (typeof window.showApiDebug === 'function') window.showApiDebug(candidate, 'probe');
           return candidate;
         }
       }
 
       const fallback = getApiCandidates();
-      return fallback.length > 0 ? fallback[0] : '';
+      const fallbackUrl = fallback.length > 0 ? fallback[0] : '';
+      if (typeof window.showApiDebug === 'function') window.showApiDebug(fallbackUrl, 'fallback');
+      return fallbackUrl;
     }
 
     function getSession() {

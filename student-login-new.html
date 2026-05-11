@@ -309,7 +309,19 @@
       return [...new Set(out)].filter(Boolean);
     }
     async function canReachApi(base) { try { const r = await fetch(`${base}/health`); return r.ok; } catch { return false; } }
-    async function resolveApiBaseUrl() { if (resolvedApiBaseUrl) return resolvedApiBaseUrl; for (const c of getApiCandidates()) { if (await canReachApi(c)) { resolvedApiBaseUrl = c; return c; } } return getApiCandidates()[0] || ''; }
+    async function resolveApiBaseUrl() {
+      if (resolvedApiBaseUrl) return resolvedApiBaseUrl;
+      for (const c of getApiCandidates()) {
+        if (await canReachApi(c)) {
+          resolvedApiBaseUrl = c;
+          if (typeof window.showApiDebug === 'function') window.showApiDebug(c, 'probe');
+          return c;
+        }
+      }
+      const fallback = getApiCandidates()[0] || '';
+      if (typeof window.showApiDebug === 'function') window.showApiDebug(fallback, 'fallback');
+      return fallback;
+    }
     async function apiFetch(path, options = {}) {
       const base = await resolveApiBaseUrl(); if (!base) throw new Error('Backend URL not configured');
       const headers = new Headers(options.headers || {});
