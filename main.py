@@ -145,13 +145,36 @@ def resolve_ipv4_host(hostname: str) -> Optional[str]:
 
 def build_postgres_connection_settings() -> dict:
     load_env_file(os.path.join(BASE_DIR, ".env"))
+    # Prefer an explicit DATABASE_URL (supports pooler host/port)
+    dsn = os.environ.get("DATABASE_URL")
+    sslmode = os.environ.get("SUPABASE_DB_SSLMODE", os.environ.get("PGSSLMODE", "require"))
 
+    if dsn:
+        normalized_dsn = normalize_postgres_dsn(dsn)
+        parsed = urlparse(normalized_dsn)
+        parsed_user = unquote(parsed.username) if parsed.username else None
+        parsed_password = unquote(parsed.password) if parsed.password else None
+        settings = {
+            "dbname": parsed.path.lstrip("/") or None,
+            "user": parsed_user,
+            "password": parsed_password,
+            "host": parsed.hostname,
+            "port": parsed.port or 5432,
+            "connect_timeout": 10,
+            "sslmode": sslmode,
+            "cursor_factory": psycopg2.extras.RealDictCursor,
+        }
+        ipv4_host = resolve_ipv4_host(parsed.hostname or "")
+        if ipv4_host:
+            settings["hostaddr"] = ipv4_host
+        return settings
+
+    # Fallback to SUPABASE_* parts for legacy config
     host = os.environ.get("SUPABASE_DB_HOST")
     port = os.environ.get("SUPABASE_DB_PORT")
     dbname = os.environ.get("SUPABASE_DB_NAME")
     user = os.environ.get("SUPABASE_DB_USER")
     password = os.environ.get("SUPABASE_DB_PASSWORD")
-    sslmode = os.environ.get("SUPABASE_DB_SSLMODE", os.environ.get("PGSSLMODE", "require"))
 
     if host and user and password and dbname:
         settings = {
@@ -169,28 +192,7 @@ def build_postgres_connection_settings() -> dict:
             settings["hostaddr"] = ipv4_host
         return settings
 
-    dsn = os.environ.get("DATABASE_URL")
-    if not dsn:
-        raise PGOperationalError("DATABASE_URL not set")
-
-    normalized_dsn = normalize_postgres_dsn(dsn)
-    parsed = urlparse(normalized_dsn)
-    settings = {
-        "dbname": parsed.path.lstrip("/") or None,
-        "user": parsed.username,
-        "password": parsed.password,
-        "port": parsed.port or 5432,
-        "connect_timeout": 10,
-        "sslmode": sslmode,
-        "cursor_factory": psycopg2.extras.RealDictCursor,
-    }
-    ipv4_host = resolve_ipv4_host(parsed.hostname or "")
-    if ipv4_host:
-        settings["host"] = parsed.hostname
-        settings["hostaddr"] = ipv4_host
-    else:
-        settings["host"] = parsed.hostname
-    return settings
+    raise PGOperationalError("DATABASE_URL not set and SUPABASE_* variables missing")
 
 
 def get_server_connection():
