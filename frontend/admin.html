@@ -690,16 +690,10 @@
         candidates.push(singleConfigUrl);
       }
 
-      if (window.location.protocol.startsWith('http')) {
-        candidates.push(normalizeBaseUrl(window.location.origin));
-      }
-
       if (window.location.protocol === 'file:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
         candidates.push('http://127.0.0.1:8002');
         candidates.push('http://127.0.0.1:8001');
       }
-
-      candidates.push('http://10.179.54.212:8000');
 
       return [...new Set(candidates)].filter(Boolean);
     }

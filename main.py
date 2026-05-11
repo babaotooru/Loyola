@@ -1,6 +1,7 @@
 ﻿from datetime import datetime, timedelta
 from typing import Optional
 from fastapi import FastAPI, HTTPException, Header, Request, Depends
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel
 import base64
@@ -16,6 +17,37 @@ import psycopg2.extras
 from psycopg2 import OperationalError as PGOperationalError
 
 app = FastAPI()
+
+
+def get_allowed_origins() -> list[str]:
+    # Comma-separated origins in env, e.g. https://site1.vercel.app,https://site2.vercel.app
+    raw = os.environ.get("ALLOWED_ORIGINS", "")
+    items = [origin.strip() for origin in raw.split(",") if origin.strip()]
+    defaults = [
+        "https://loyola-rho.vercel.app",
+        "https://loyola.vercel.app",
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:5500",
+        "http://127.0.0.1:5500",
+    ]
+    seen = set()
+    ordered = []
+    for origin in items + defaults:
+        if origin not in seen:
+            ordered.append(origin)
+            seen.add(origin)
+    return ordered
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=get_allowed_origins(),
+    allow_origin_regex=r"https://.*\.vercel\.app",
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Base paths and config
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))

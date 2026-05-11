@@ -386,9 +386,6 @@
       }
       const single = normalizeBaseUrl(window.API_BASE_URL);
       if (single) candidates.push(single);
-      if (window.location.protocol.startsWith('http')) {
-        candidates.push(normalizeBaseUrl(window.location.origin));
-      }
       if (window.location.protocol === 'file:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
         candidates.push('http://127.0.0.1:8002');
         candidates.push('http://127.0.0.1:8001');

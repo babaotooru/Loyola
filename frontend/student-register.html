@@ -172,7 +172,6 @@
       const out = [];
       if (Array.isArray(window.API_BASE_URLS)) window.API_BASE_URLS.forEach((u) => { const n = normalizeBaseUrl(u); if (n) out.push(n); });
       const single = normalizeBaseUrl(window.API_BASE_URL); if (single) out.push(single);
-      if (window.location.protocol.startsWith('http')) out.push(normalizeBaseUrl(window.location.origin));
       if (window.location.protocol === 'file:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
         out.push('http://127.0.0.1:8002'); out.push('http://127.0.0.1:8001');
       }
