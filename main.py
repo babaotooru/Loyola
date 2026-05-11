@@ -10,7 +10,7 @@ import hmac
 import os
 import secrets
 import socket
-from urllib.parse import quote, urlparse
+from urllib.parse import quote, unquote, urlparse
 
 import psycopg2
 import psycopg2.extras
@@ -126,7 +126,8 @@ def normalize_postgres_dsn(dsn: str) -> str:
         return dsn
 
     username, password = userinfo.split(":", 1)
-    encoded_password = quote(password, safe="")
+    # Avoid double-encoding when password is already URL-encoded in DATABASE_URL.
+    encoded_password = quote(unquote(password), safe="")
     return f"{scheme}://{username}:{encoded_password}@{hostpart}"
 
 
@@ -199,7 +200,9 @@ def get_server_connection():
 def get_mysql_connection():
     try:
         return get_server_connection()
-    except Exception:
+    except Exception as e:
+        global mysql_connection_error
+        mysql_connection_error = str(e)
         return None
 
 
@@ -313,7 +316,8 @@ def create_session(account_id: int, role: str) -> str:
 
     conn = get_mysql_connection()
     if not conn:
-        raise HTTPException(status_code=503, detail="Could not connect to database")
+        error_detail = mysql_connection_error or "Database connection failed (no error details)"
+        raise HTTPException(status_code=503, detail=f"Database offline: {error_detail}")
 
     try:
         cursor = conn.cursor()
@@ -344,7 +348,8 @@ def get_account_from_token(authorization: Optional[str]) -> dict:
 
     conn = get_mysql_connection()
     if not conn:
-        raise HTTPException(status_code=503, detail="Could not connect to database")
+        error_detail = mysql_connection_error or "Database connection failed (no error details)"
+        raise HTTPException(status_code=503, detail=f"Database offline: {error_detail}")
 
     token_hash = hash_token(token)
 
@@ -550,11 +555,18 @@ class AdminLogin(BaseModel):
 @app.get("/health")
 def health_check():
     """Health check endpoint"""
+    # Force re-probe of connection to ensure fresh error state
+    test_conn = get_mysql_connection()
+    if test_conn:
+        test_conn.close()
+    
     return {
         "status": "healthy",
         "storage": "postgres",
-        "database": "configured" if os.environ.get("DATABASE_URL") or os.environ.get("SUPABASE_DB_HOST") else "not configured",
-        "database_error": None,
+        "database": "online" if test_conn else "offline",
+        "database_error": mysql_connection_error,
+        "database_url_set": bool(os.environ.get("DATABASE_URL")),
+        "supabase_configured": bool(os.environ.get("SUPABASE_DB_HOST")),
         "timestamp": datetime.now().isoformat(),
     }
 
@@ -630,7 +642,9 @@ def auth_register(payload: StudentRegister):
 
     conn = get_mysql_connection()
     if not conn:
-        raise HTTPException(status_code=503, detail="Could not connect to database")
+        error_detail = mysql_connection_error or "Database connection failed (no error details)"
+        print(f"❌ /auth/register DB connection failed: {error_detail}")
+        raise HTTPException(status_code=503, detail=f"Database offline: {error_detail}")
 
     try:
         cursor = conn.cursor()
@@ -688,7 +702,8 @@ def auth_login(payload: StudentLogin):
 
     conn = get_mysql_connection()
     if not conn:
-        raise HTTPException(status_code=503, detail="Could not connect to database")
+        error_detail = mysql_connection_error or "Database connection failed (no error details)"
+        raise HTTPException(status_code=503, detail=f"Database offline: {error_detail}")
 
     try:
         cursor = conn.cursor()
@@ -742,7 +757,8 @@ def admin_login(payload: AdminLogin):
 
     conn = get_mysql_connection()
     if not conn:
-        raise HTTPException(status_code=503, detail="Could not connect to database")
+        error_detail = mysql_connection_error or "Database connection failed (no error details)"
+        raise HTTPException(status_code=503, detail=f"Database offline: {error_detail}")
 
     try:
         cursor = conn.cursor()
@@ -831,7 +847,8 @@ def apply(application: ApplicationRequest, current_account: dict = Depends(requi
 
         conn = get_mysql_connection()
         if not conn:
-            raise HTTPException(status_code=503, detail="Could not connect to database")
+            error_detail = mysql_connection_error or "Database connection failed (no error details)"
+            raise HTTPException(status_code=503, detail=f"Database offline: {error_detail}")
 
         try:
             cursor = conn.cursor()
@@ -877,7 +894,8 @@ def get_data(_current_account: dict = Depends(require_admin_account)):
     try:
         conn = get_mysql_connection()
         if not conn:
-            raise HTTPException(status_code=503, detail="Could not connect to database")
+            error_detail = mysql_connection_error or "Database connection failed (no error details)"
+            raise HTTPException(status_code=503, detail=f"Database offline: {error_detail}")
 
         cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         cursor.execute(
@@ -903,7 +921,8 @@ def get_data(_current_account: dict = Depends(require_admin_account)):
 def get_accounts(_current_account: dict = Depends(require_admin_account)):
     conn = get_mysql_connection()
     if not conn:
-        raise HTTPException(status_code=503, detail="Could not connect to database")
+        error_detail = mysql_connection_error or "Database connection failed (no error details)"
+        raise HTTPException(status_code=503, detail=f"Database offline: {error_detail}")
 
     try:
         cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
@@ -934,7 +953,8 @@ def cleanup_applications(_current_account: dict = Depends(require_admin_account)
 
     conn = get_mysql_connection()
     if not conn:
-        raise HTTPException(status_code=503, detail="Could not connect to database")
+        error_detail = mysql_connection_error or "Database connection failed (no error details)"
+        raise HTTPException(status_code=503, detail=f"Database offline: {error_detail}")
 
     try:
         cursor = conn.cursor()
