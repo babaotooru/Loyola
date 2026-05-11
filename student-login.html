@@ -496,9 +496,8 @@
         }
 
         showMessage('ok', 'Login successful! Redirecting to course selection...');
-        setTimeout(async () => {
-          const appUrl = await getPortalUrl('/student-application.html');
-          window.location.href = appUrl;
+        setTimeout(() => {
+          window.location.href = 'student-application.html';
         }, 800);
       } catch (error) {
         showMessage('err', error.message || 'Login failed');
